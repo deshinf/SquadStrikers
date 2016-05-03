@@ -1,0 +1,1 @@
+﻿public enum Targeting { NoTargeting = 0, MovementTargeting = 1, HostileTargeting = 2, FriendlyTargeting = 3 }

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="99.999992"
+   height="99.999992"
+   viewBox="0 0 99.99999 99.99999"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="ManaReserves1.svg"
+   inkscape:export-filename="C:\DeshinData\CodeProjects\TBTRoguelite\TBT Roguelite\Assets\Sprites\SkillIcons\MagicalReserves1Icon.pn"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="2.5100002"
+     inkscape:cx="9.5417938"
+     inkscape:cy="80.314556"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="2194"
+     inkscape:window-height="1171"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     units="px"
+     showguides="false">
+    <sodipodi:guide
+       position="15.537847,283.66531"
+       orientation="0,1"
+       id="guide5352" />
+  </sodipodi:namedview>
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-952.36221)">
+    <rect
+       style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:3.30035901;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect4138"
+       width="96.699638"
+       height="96.699638"
+       x="1.6501795"
+       y="954.01239"
+       rx="19.339928"
+       ry="19.339928" />
+    <path
+       sodipodi:type="star"
+       style="fill:#ffffff;fill-opacity:0;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="path7027"
+       sodipodi:sides="5"
+       sodipodi:cx="-220.71712"
+       sodipodi:cy="969.09528"
+       sodipodi:r1="65.866096"
+       sodipodi:r2="32.933048"
+       sodipodi:arg1="1.0471976"
+       sodipodi:arg2="1.6755161"
+       inkscape:flatsided="false"
+       inkscape:rounded="0"
+       inkscape:randomized="0"
+       d="m -187.78407,1026.137 -36.37549,-24.2891 -40.63058,16.1954 11.85964,-42.10086 -27.95829,-33.63732 43.70515,-1.7307 23.35141,-36.98442 15.15162,41.03125 42.39026,10.7797 -34.34093,27.0894 z"
+       inkscape:transform-center-x="0.061809467"
+       inkscape:transform-center-y="-3.8897109"
+       transform="matrix(0.62402086,-0.06864073,0.06864073,0.62402086,121.27555,385.83073)" />
+  </g>
+</svg>

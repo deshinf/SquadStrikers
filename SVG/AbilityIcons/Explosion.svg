@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="99.999992"
+   height="99.999992"
+   viewBox="0 0 99.99999 99.99999"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="Explosion.svg"
+   inkscape:export-filename="C:\DeshinData\CodeProjects\TBTRoguelite\TBT Roguelite\Assets\Sprites\SkillIcons\SpearMasteryIcon.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="2.5100002"
+     inkscape:cx="9.5417938"
+     inkscape:cy="80.314556"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="2194"
+     inkscape:window-height="1171"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     units="px"
+     showguides="false">
+    <sodipodi:guide
+       position="15.537847,283.66531"
+       orientation="0,1"
+       id="guide5352" />
+  </sodipodi:namedview>
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-952.36221)">
+    <rect
+       style="fill:#ffffff;fill-opacity:1;stroke:#ff0000;stroke-width:3.30035901;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect4138"
+       width="96.699638"
+       height="96.699638"
+       x="1.6501795"
+       y="954.01239"
+       rx="19.339928"
+       ry="19.339928"
+       inkscape:export-filename="C:\DeshinData\CodeProjects\TBTRoguelite\TBT Roguelite\Assets\Sprites\SkillIcons\Explosion.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
+    <g
+       transform="matrix(0.98257134,0,0,0.98246785,21.965144,-3.5148102)"
+       id="g4148">
+      <g
+         id="g4187"
+         transform="translate(48.076613,-101.73696)">
+        <path
+           sodipodi:type="star"
+           style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:2.50174897;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           id="path5350"
+           sodipodi:sides="15"
+           sodipodi:cx="56.175293"
+           sodipodi:cy="-84.063736"
+           sodipodi:r1="75.450417"
+           sodipodi:r2="37.725208"
+           sodipodi:arg1="0.70690806"
+           sodipodi:arg2="0.91634757"
+           inkscape:flatsided="false"
+           inkscape:rounded="0"
+           inkscape:randomized="0"
+           d="m 113.5458,-35.059758 -34.406343,-19.073416 9.514692,38.171488 -23.673905,-31.418754 -6.833639,38.7413637 -8.848029,-38.3315057 -22.000373,32.612506 7.507751,-38.61639 -33.3630413,20.844649 22.5653723,-32.224151 -38.956937,5.472563 33.721236,-20.260063 -37.814825,-10.845779 39.046392,-4.792825 -30.134185,-25.288788 37.620072,11.50314 -17.243073,-35.35914 29.6889,25.8101 -1.370475,-39.31557 16.624247,35.65426 14.73909,-36.47397 0.685111,39.33347 28.300133,-27.32571 -15.372488,36.21158 36.967827,-13.45257 -28.772044,26.828369 39.243444,2.746628 -37.19665,12.806292 34.73352,18.470917 -39.189623,-3.43011 z"
+           transform="matrix(0.40675744,0,0,0.40690647,-42.27497,1159.5687)"
+           inkscape:transform-center-x="0.082353843"
+           inkscape:transform-center-y="0.24748554" />
+      </g>
+    </g>
+  </g>
+</svg>

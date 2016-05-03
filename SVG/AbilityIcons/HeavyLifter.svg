@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="99.999992"
+   height="99.999992"
+   viewBox="0 0 99.99999 99.99999"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="HeavyLifter.svg"
+   inkscape:export-filename="C:\DeshinData\CodeProjects\TBTRoguelite\TBT Roguelite\Assets\Sprites\SkillIcons\HeavyLifter.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1.28"
+     inkscape:cx="76.786755"
+     inkscape:cy="-77.906236"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1311"
+     inkscape:window-height="1162"
+     inkscape:window-x="-7"
+     inkscape:window-y="0"
+     inkscape:window-maximized="0"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     units="px" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-952.36221)">
+    <rect
+       style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:3.30035901;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect4138"
+       width="96.699638"
+       height="96.699638"
+       x="1.6501795"
+       y="954.01239"
+       rx="19.339928"
+       ry="19.339928" />
+    <g
+       id="g5578"
+       transform="matrix(1.0002269,0,0,0.97318082,19.993966,15.723422)">
+      <rect
+         style="fill:none;fill-opacity:0.35838132;stroke:#000000;stroke-width:1.55843961;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         id="rect5547"
+         width="58.441479"
+         height="75.486923"
+         x="0.77926099"
+         y="976.09613"
+         rx="10.20852"
+         ry="10.207445" />
+      <rect
+         style="fill:none;fill-opacity:0.35838132;stroke:#000000;stroke-width:1.78000164;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         id="rect5551"
+         width="48.219902"
+         height="33.219997"
+         x="5.8900471"
+         y="1013.2522"
+         rx="11.818312"
+         ry="21.800165" />
+      <path
+         style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1.07063937px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         d="m 15,1021.8269 30,0"
+         id="path5553"
+         inkscape:connector-curvature="0" />
+      <path
+         style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         d="m 0.5,987.3622 c 0,0 -0.26562351,9.5 9.5,9.5 l 40,0 c 8.330691,0 9.5,-9.5 9.5,-9.5"
+         id="path5555"
+         inkscape:connector-curvature="0"
+         sodipodi:nodetypes="cscc" />
+      <rect
+         ry="0.91210204"
+         rx="1.2216711"
+         y="994.75391"
+         x="15.791699"
+         height="5.4166017"
+         width="3.4166017"
+         id="rect5561"
+         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:1.5833981;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      <rect
+         ry="0.91210204"
+         rx="1.2216711"
+         y="994.75391"
+         x="40.791698"
+         height="5.4166017"
+         width="3.4166017"
+         id="rect5561-6"
+         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:1.5833981;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    </g>
+  </g>
+</svg>
