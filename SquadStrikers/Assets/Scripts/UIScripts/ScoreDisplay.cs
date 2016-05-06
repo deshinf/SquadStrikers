@@ -4,9 +4,10 @@ using UnityEngine.UI;
 
 public class ScoreDisplay : MonoBehaviour {
 
+	private bool _first_update;
+
 	// Use this for initialization
 	void Start () {
-		UpdateDisplay ();
 	}
 
 	public void UpdateDisplay () {
@@ -17,6 +18,9 @@ public class ScoreDisplay : MonoBehaviour {
 
 	// Update is called once per frame
 	void Update () {
-	
+		if (!_first_update) {
+			UpdateDisplay ();
+			_first_update = true;
+		}
 	}
 }

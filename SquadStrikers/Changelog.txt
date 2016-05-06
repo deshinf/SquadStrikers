@@ -1,0 +1,13 @@
+﻿0.1.2:
+Changed sizes of UI elements to better work with varied resolutions
+Cleaned up display of Message Log at bottom of screen (removed jerkiness).
+Fixed bug where enemies moving onto Substance X could collect it for you.
+Changed default zoom level so the whole board fits on screen at any resolution.
+Fixed bug where score undefined when the score display tried to render the first time.
+Added More/Less Feature to message log.
+Added hotkeys.
+
+Known issues:
+Hotkeys wipe left hand stat bar display.
+Bow Mastery and Power Blow Bonuses not shown on left hand stat bar.
+Cannot cancel move actions

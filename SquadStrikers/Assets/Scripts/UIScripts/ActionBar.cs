@@ -19,12 +19,15 @@ public class ActionBar : MonoBehaviour {
 		float buttonHeight = actionButtonPrefab.GetComponent<RectTransform> ().rect.height;
 		float menuHeight = gameObject.GetComponent<RectTransform> ().rect.height;
 		float verticalOffset = buttonHeight/2;
+		int i = 0;
 		foreach (Action a in actions) {
 			GameObject button = ((GameObject) Instantiate (actionButtonPrefab, new Vector2 (0f, menuHeight/2 - verticalOffset), Quaternion.identity));
+			button.GetComponent<ActionButton>().setHotkey (i);
 			button.GetComponent<ActionButton> ().action = a;
 			button.transform.SetParent (gameObject.transform,false);
 			actionButtons.Add (button);
 			verticalOffset += buttonHeight;
+			i++;
 		}
 	}
 	public void DropItemSelector () {
@@ -54,6 +57,7 @@ public class ActionBar : MonoBehaviour {
 		float buttonHeight = actionButtonPrefab.GetComponent<RectTransform> ().rect.height;
 		float menuHeight = gameObject.GetComponent<RectTransform> ().rect.height;
 		GameObject button = ((GameObject) Instantiate (actionButtonPrefab, new Vector2 (0f, menuHeight/2 - buttonHeight/2), Quaternion.identity));
+		button.GetComponent<ActionButton> ().setHotkey (0);
 		button.GetComponent<ActionButton> ().action = new Action("Cancel", "Cancels this action and goes back to the action menu.", null);
 		button.transform.SetParent (gameObject.transform,false);
 		actionButtons.Add (button);

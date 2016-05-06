@@ -415,7 +415,7 @@ public class BoardHandler : MonoBehaviour {
 			getTileState (start).unit = null;
 			getTileState (finish).unit.updatePosition ();
 		}
-		if (getTileState (finish).substanceX) {
+		if (getTileState (finish).substanceX && getTileState(finish).unit is PCHandler) {
 			GameObject.FindGameObjectWithTag ("PlayerTeam").GetComponent<PlayerTeamScript> ().score += getTileState (finish).substanceX.amount;
 			GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().Log ("Gained " + getTileState (finish).substanceX.amount.ToString() + " Substance X.");
 			getTileState (finish).eraseSubstanceX();
