@@ -23,7 +23,7 @@ public class ActionHandler : MonoBehaviour {
 		string actionName = action.actionName;
 		if (actionName == "Cancel") {
 			boardHandler.gameState = BoardHandler.GameStates.TargetMode;
-			GameObject.FindGameObjectWithTag ("StatsBar").GetComponent<StatsBar> ().Revert ();
+			GameObject.FindGameObjectWithTag ("StatsBar").GetComponent<StatsBar> ().displayStats (actor);
 			boardHandler.gameState = BoardHandler.GameStates.ActionMode;
 		} else {
 			Assert.IsTrue (boardHandler.gameState == BoardHandler.GameStates.ActionMode);
@@ -142,7 +142,7 @@ public class ActionHandler : MonoBehaviour {
 				} else {
 					GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().Log ("Not enough space in " + boardHandler.selectedUnit ().unitName + "'s inventory. Drop something first.");
 					Assert.IsTrue (boardHandler.gameState == BoardHandler.GameStates.ActionMode);
-					GameObject.FindGameObjectWithTag ("StatsBar").GetComponent<StatsBar> ().Revert ();
+					GameObject.FindGameObjectWithTag ("StatsBar").GetComponent<StatsBar> ().displayStats(actor);
 					GameObject.FindGameObjectWithTag ("ActionBar").GetComponent<ActionBar> ().DropItemSelector ();
 					currentAction = new Action ("", "", null);
 					break;

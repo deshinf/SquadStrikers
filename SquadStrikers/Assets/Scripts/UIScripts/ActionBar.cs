@@ -25,6 +25,10 @@ public class ActionBar : MonoBehaviour {
 			button.GetComponent<ActionButton>().setHotkey (i);
 			button.GetComponent<ActionButton> ().action = a;
 			button.transform.SetParent (gameObject.transform,false);
+			button.GetComponent<RectTransform> ().anchorMin = new Vector2 (0.01f, (menuHeight - verticalOffset)/menuHeight);
+			button.GetComponent<RectTransform> ().anchorMax = new Vector2 (0.99f, (menuHeight - verticalOffset)/menuHeight);
+			button.GetComponent<RectTransform> ().offsetMin = new Vector2 (0f, -buttonHeight / 2);
+			button.GetComponent<RectTransform> ().offsetMax = new Vector2 (0f, buttonHeight / 2);
 			actionButtons.Add (button);
 			verticalOffset += buttonHeight;
 			i++;

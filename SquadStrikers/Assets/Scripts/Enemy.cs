@@ -232,6 +232,23 @@ public class Enemy : Unit {
 		GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().AlertLog (report);
 	}
 
+	public override string ToDisplayString () {
+		string lineBreak = System.Environment.NewLine;
+		string output = unitName + lineBreak;
+		output += "Enemy Unit" + lineBreak;
+		output += "Attack: " + attack.ToString() + lineBreak;
+		output += "Dodge: " + dodge.ToString() + lineBreak;
+		output += "Defense: " + minDefense.ToString() + "-" + maxDefense.ToString() + lineBreak;
+		output += "Damage: " + damage.ToString() + lineBreak;
+		output += "Move: " + move.ToString() + lineBreak;
+		output += "Hit Points: " + currentHP.ToString() + "/" + maxHP.ToString() + lineBreak;
+		output += "HP Regen: " + hPRegen.ToString() + lineBreak;
+		output += "Energy: " + currentEnergy.ToString() + "/" + maxEnergy.ToString() + lineBreak;
+		output += "Energy Regen: " + energyRegen.ToString() + lineBreak;
+		output += "Descirption: " + description;
+		return output;
+	}
+
 	public void Refresh () {
 		heal (hPRegen);
 		gainEnergy (energyRegen);

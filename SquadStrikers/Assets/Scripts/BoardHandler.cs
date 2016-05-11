@@ -555,6 +555,13 @@ public class BoardHandler : MonoBehaviour {
 	public void EndTurn () {
 		if (gameState == GameStates.MovementMode) {
 			gameState = GameStates.EnemyTurn;
+		} else if (gameState == GameStates.TargetMode) {
+			gameObject.GetComponent<ActionHandler> ().PerformAction (new PCHandler.Action("Cancel","",null as Item));
+			gameObject.GetComponent<ActionHandler> ().PerformAction (new PCHandler.Action("Do Nothing","",null as Item));
+			gameState = GameStates.EnemyTurn;
+		} else if (gameState == GameStates.ActionMode) {
+			gameObject.GetComponent<ActionHandler> ().PerformAction (new PCHandler.Action("Do Nothing","",null as Item));
+			gameState = GameStates.EnemyTurn;
 		}
 	}
 

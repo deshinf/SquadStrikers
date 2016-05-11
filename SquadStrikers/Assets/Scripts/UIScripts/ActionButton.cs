@@ -51,12 +51,12 @@ public class ActionButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
 
 	public void OnPointerEnter (PointerEventData data) {
 		if (!(action.actionName == "Cancel")) {
-			GameObject.FindGameObjectWithTag ("StatsBar").GetComponent<StatsBar> ().ActionDescription (action);
+			GameObject.FindGameObjectWithTag ("StatsBar").GetComponent<StatsBar> ().displayUnitAndAction(GameObject.FindGameObjectWithTag("BoardHandler").GetComponent<BoardHandler>().selectedUnit(), action);
 		}
 	}
 
 	public void OnPointerExit (PointerEventData data) {
-		GameObject.FindGameObjectWithTag ("StatsBar").GetComponent<StatsBar> ().Revert ();
+		GameObject.FindGameObjectWithTag ("StatsBar").GetComponent<StatsBar> ().displayStats(GameObject.FindGameObjectWithTag("BoardHandler").GetComponent<BoardHandler>().selectedUnit());
 	}
 
 	void Update() {

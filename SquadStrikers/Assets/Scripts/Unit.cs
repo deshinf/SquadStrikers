@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.EventSystems;
 
 public abstract class Unit : MonoBehaviour {
     //TODO: This class isn't fully implemented yet
@@ -149,12 +150,24 @@ public abstract class Unit : MonoBehaviour {
 	
 	}
 
+	public abstract string ToDisplayString ();
 
 	public virtual void OnMouseDown()
 	{
 		if (targeting == Targeting.HostileTargeting || targeting == Targeting.FriendlyTargeting) {
 			GameObject.FindGameObjectWithTag("BoardHandler").GetComponent<ActionHandler>().TriggerTargetedAbility(gameObject);
+		}
+	}
 
+	public void OnMouseEnter () {
+		if (targeting == Targeting.HostileTargeting || targeting == Targeting.FriendlyTargeting) {
+			GameObject.FindGameObjectWithTag ("StatsBar").GetComponent<StatsBar> ().displayUnitActionAndTarget(GameObject.FindGameObjectWithTag("BoardHandler").GetComponent<BoardHandler>().selectedUnit(),GameObject.FindGameObjectWithTag("BoardHandler").GetComponent<ActionHandler>().currentAction,gameObject);
+		}
+	}
+
+	public void OnMouseExit () {
+		if (targeting == Targeting.HostileTargeting || targeting == Targeting.FriendlyTargeting) {
+			GameObject.FindGameObjectWithTag ("StatsBar").GetComponent<StatsBar> ().displayUnitAndAction(GameObject.FindGameObjectWithTag("BoardHandler").GetComponent<BoardHandler>().selectedUnit(),GameObject.FindGameObjectWithTag("BoardHandler").GetComponent<ActionHandler>().currentAction);
 		}
 	}
 

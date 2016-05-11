@@ -7,7 +7,7 @@ public class Weapon : ActionItem {
 	public int attack;
 	public int damage;
 	public int maxCharges;
-	public override string description { get { return base.description + System.Environment.NewLine + "Attack: " + attack + System.Environment.NewLine + "Damage: " + damage + System.Environment.NewLine + "Charges: " + charges + "/" + maxCharges; } set { base.description = value; } }
+	public override string description { get { return base.description; } set { base.description = value; } }// + System.Environment.NewLine + "Attack: " + attack + System.Environment.NewLine + "Damage: " + damage + System.Environment.NewLine + "Charges: " + charges + "/" + maxCharges; } set { base.description = value; } }
 	private int _charges;
 	public int charges {
 		get { return _charges; }
@@ -48,6 +48,33 @@ public class Weapon : ActionItem {
 		Destroy (gameObject);
 	}
 
+
+	public override string ToDisplayString () {
+		string output;
+		string lineBreak = System.Environment.NewLine;
+		if (owner) {
+			output = itemName + "(" + itemClass + "):" + lineBreak + description + lineBreak;
+			if (itemClass == "Bow" && owner.hasAbility (PCHandler.Ability.BowMastery)) {
+				output += "Accuracy: " + attack + "+" + owner.attack + "+" + owner.bowMasteryBonusAttack + "=" + (attack + owner.attack + owner.bowMasteryBonusAttack) + lineBreak;
+			}
+			else {
+				output += "Accuracy: " + attack + "+" + owner.attack + "=" + (attack + owner.attack) + lineBreak;
+			}
+			if (itemClass == "Bow" && owner.hasAbility (PCHandler.Ability.BowMastery)) {
+				output += "Damage: " + damage + "+" + owner.damage + "+" + owner.bowMasteryBonusAttack + "=" + (damage + owner.damage + owner.bowMasteryBonusDamage) + lineBreak;
+			}
+			else {
+				output += "Damage: " + damage + "+" + owner.damage + "=" + (damage + owner.damage) + lineBreak;
+			}
+			output += "Charges: " + charges + "/" + maxCharges;
+		} else {
+			output = itemName + "(" + itemClass + "):" + lineBreak + description + lineBreak;
+			output += "Accuracy: " + attack;
+			output += "Damage: " + damage;
+			output += "Charges: " + charges + "/" + maxCharges;
+		}
+		return output;
+	}
 
 	
 	// Update is called once per frame

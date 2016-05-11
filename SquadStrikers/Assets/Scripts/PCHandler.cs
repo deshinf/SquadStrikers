@@ -72,12 +72,10 @@ public partial class PCHandler : Unit {
 
 	private int  stoneDamageBonus;
 	//Unlike Enemies, player character's stats are calculated from their class's base stats plus modifiers, rather than set directly.
+	//The baseStatName represents the characters stats with no conditional terms added. The statName terms include all conditional modifiers.
 	public override int attack {
 		get {
-			int output = characterClass.baseAttack;
-			if (hasAbility (Ability.WeaponMaster)) {
-				output += weaponMasterModifier;
-			}
+			int output = baseAttack;
 			if (hasAbility (Ability.CarefulStrike) && carefulStrikeActive) {
 				output += carefulStrikeBonus;
 			}
@@ -104,25 +102,38 @@ public partial class PCHandler : Unit {
 			return output;
 		}
 		set { throw new Exception ("Should not edit player stats directly. Add variable to represent effect."); } }
-	public override int dodge { get{ int output = characterClass.baseDodge;
-			if (hasAbility (Ability.Dodger)) {
-				output += dodgerModifier;
+	public int baseAttack {
+		get {
+			int output = characterClass.baseAttack;
+			if (hasAbility (Ability.WeaponMaster)) {
+				output += weaponMasterModifier;
 			}
+			return output;
+		}
+	}
+	public override int dodge { get{ int output = baseDodge;
 			if (hasAbility (Ability.AllOutDefense) && allOutDefenseActive) {
 				output = output * 2;
 			}
 			return output;
 		}
 		set { throw new Exception ("Should not edit player stats directly. Add variable to represent effect."); }  } //attack-opponent's dodge is base chance to hit with attack.
-	public override int minDefense { get{ return characterClass.baseMinDefense; }
+	public int baseDodge {
+		get {
+			int output = characterClass.baseDodge;
+			if (hasAbility (Ability.Dodger)) {
+				output += dodgerModifier;
+			}
+			return output;
+		}
+	}
+	public override int minDefense { get{ return baseMinDefense; }
 		set { throw new Exception ("Should not edit player stats directly. Add variable to represent effect."); }  }
+	public int baseMinDefense { get { return characterClass.baseMinDefense; } }
 	public override int maxDefense { get{
-			int output = characterClass.baseMaxDefense;
+			int output = baseMaxDefense;
 			if (ancientMagic && ancientMagic.itemClass == "Stone") {
 				output += ancientMagic.passiveExtent; 
-			}
-			if (hasAbility(Ability.Armourer)) {
-				output += armourerDefenseModifier;
 			}
 			if (hasAbility (Ability.FormationFighter)) {
 				foreach (Unit u in BoardHandler.GetBoardHandler().GetOtherUnitsAround(BoardHandler.GetBoardHandler().FindUnit(this),1,false,true)) {
@@ -137,11 +148,18 @@ public partial class PCHandler : Unit {
 			return output;
 		}
 		set { throw new Exception ("Should not edit player stats directly. Add variable to represent effect."); }  } //A random number between these two is subtracted from all damage taken.
+	public int baseMaxDefense {
+		get {
+			int output = characterClass.baseMaxDefense;
+			if (hasAbility (Ability.Armourer)) {
+				output += armourerDefenseModifier;
+			}
+			return output;
+		}
+	}
 	public override int damage { get{
-			int output = characterClass.baseDamage + stoneDamageBonus;
-			if (hasAbility (Ability.StrongMan)) {
-				output += strongManModifier;
-			} if (hasAbility (Ability.StrenthReserves)) {
+			int output = baseDamage + stoneDamageBonus;
+			if (hasAbility (Ability.StrenthReserves)) {
 				output += strengthReserveBonus;
 			}
 			if (hasAbility (Ability.CrowdBrawler)) {
@@ -157,17 +175,36 @@ public partial class PCHandler : Unit {
 			return output;
 		}
 		set { throw new Exception ("Should not edit player stats directly. Add variable to represent effect."); }  } //Base damage dealt with an attack
-	public override int move { get{
-			if (ancientMagic && ancientMagic.itemClass == "Mobility") {
-				return characterClass.baseMoveSpeed + ancientMagic.passiveExtent; 
-			} else {
-				return characterClass.baseMoveSpeed;
+	public int baseDamage { get{
+			int output = characterClass.baseDamage;
+			if (hasAbility (Ability.StrongMan)) {
+				output += strongManModifier;
 			}
+			return output;
 		}
 		set { throw new Exception ("Should not edit player stats directly. Add variable to represent effect."); }  } //Base damage dealt with an attack
+	public override int move { get{
+			int output = baseMove;
+			if (ancientMagic && ancientMagic.itemClass == "Mobility") {
+				output += ancientMagic.passiveExtent; 
+			}
+			return output;
+		}
+		set { throw new Exception ("Should not edit player stats directly. Add variable to represent effect."); }  } //Base damage dealt with an attack
+	public int baseMove { get{
+			int output = characterClass.baseMoveSpeed;
+			return output;
+		}
+	}
 	public override int maxHP { get{
+			int output = baseMaxHP;
+			return output;
+		}
+		set { throw new Exception ("Should not edit player stats directly. Add variable to represent effect."); }  }
+	public int baseMaxHP {
+		get {
 			int output = characterClass.baseMaxHP;
-			if (hasAbility(Ability.ToughGuy1)) {
+			if (hasAbility (Ability.ToughGuy1)) {
 				if (hasAbility (Ability.ToughGuy2)) {
 					if (hasAbility (Ability.ToughGuy3)) {
 						output += toughGuy3CumulativeModifier;
@@ -178,19 +215,28 @@ public partial class PCHandler : Unit {
 			}
 			return output;
 		}
-		set { throw new Exception ("Should not edit player stats directly. Add variable to represent effect."); }  }
+	}
 	public override int hPRegen { get{
-			int output = characterClass.baseHPRegen;
+			int output = baseHPRegen;
 			if (ancientMagic && ancientMagic.itemClass == "Health") {
 				output += ancientMagic.passiveExtent;
 			}
+			return output;
+		}
+		set { throw new Exception ("Should not edit player stats directly. Add variable to represent effect."); }  } //Gain this much each turn up to max.
+	public int baseHPRegen { get{
+			int output = characterClass.baseHPRegen;
 			if (hasAbility (Ability.FastHealer)) {
 				output += fastHealerModifier;
 			}
 			return output;
 		}
-		set { throw new Exception ("Should not edit player stats directly. Add variable to represent effect."); }  } //Gain this much each turn up to max.
+	} //Gain this much each turn up to max.
 	public override int maxEnergy { get{
+			return baseMaxEnergy;
+		}
+		set { throw new Exception ("Should not edit player stats directly. Add variable to represent effect."); }  }
+	public int baseMaxEnergy { get{
 			if (hasAbility (Ability.MagicalReserves1)) {
 				if (hasAbility (Ability.MagicalReserves2)) {
 					if (hasAbility (Ability.MagicalReserves3)) {
@@ -202,15 +248,20 @@ public partial class PCHandler : Unit {
 			}
 			return characterClass.baseMaxEnergy;
 		}
-		set { throw new Exception ("Should not edit player stats directly. Add variable to represent effect."); }  }
+	}
 	public override int energyRegen {get{
+			int output = baseEnergyRegen;
+			return output;
+		}
+		set { throw new Exception ("Should not edit player stats directly. Add variable to represent effect."); }  } //Gain this much each turn up to max.
+	public int baseEnergyRegen {get {
 			if (hasAbility (Ability.ManaCycling)) {
 				return characterClass.baseDamage + manaCyclingModifier;
 			} else {
 				return characterClass.baseDamage;
 			}
 		}
-		set { throw new Exception ("Should not edit player stats directly. Add variable to represent effect."); }  } //Gain this much each turn up to max.
+	}
 	private bool _canMove = true;
 	public int inventoryCapacity { get{
 			int output = characterClass.inventoryCapacity;
@@ -771,6 +822,107 @@ public partial class PCHandler : Unit {
 
 	public int weaponMasterModifier= 10; //Added to attack if you have Weapon Master.
 	public int strongManModifier = 5; //Added to damage if you have Strong Man.	public enum Ability { None, SwordMastery,AxeMastery,SpearMastery,StrongMan,WeaponMaster,MysticBlast,Explosion,Heal,GroupHeal}
+
+	public override string ToDisplayString() {
+		string lineBreak = System.Environment.NewLine;
+		string output = unitName + lineBreak;
+		output += "Player Character" + lineBreak + "Class: " + characterClass.name + lineBreak;
+		if (attack == baseAttack) {
+			output += "Accuracy: " + attack.ToString () + lineBreak;
+		} else if (attack > baseAttack) {
+			output += "Accuracy: <color=green>" + attack.ToString () + "(" + baseAttack.ToString () + ")</color>" + lineBreak;
+		} else if (attack < baseAttack) {
+			output += "Accuracy: <color=red>" + attack.ToString () + "(" + baseAttack.ToString () + ")</color>" + lineBreak;
+		}
+		if (dodge == baseDodge) {
+			output += "Dodge: " + dodge.ToString () + lineBreak;
+		} else if (attack > baseAttack) {
+			output += "Dodge: <color=green>" + dodge.ToString () + "(" + baseDodge.ToString () + ")</color>" + lineBreak;
+		} else if (attack < baseAttack) {
+			output += "Dodge: <color=red>" + dodge.ToString () + "(" + baseDodge.ToString () + ")</color>" + lineBreak;
+		}
+		output += "Armour: ";
+		if (minDefense == baseMinDefense) {
+			output +=  minDefense.ToString () + " - ";
+		} else if (minDefense > minDefense) {
+			output += "<color=green>" + minDefense.ToString () + "(" + baseMinDefense.ToString () + ")</color> - ";
+		} else if (attack < baseMinDefense) {
+			output += "<color=red>" + minDefense.ToString () + "(" + baseMinDefense.ToString () + ")</color> - ";
+		}
+		if (maxDefense == baseMaxDefense) {
+			output +=  maxDefense.ToString () + lineBreak;
+		} else if (maxDefense > maxDefense) {
+			output += "<color=green>" + maxDefense.ToString () + "(" + baseMaxDefense.ToString () + ")</color>" + lineBreak;
+		} else if (attack < baseMinDefense) {
+			output += "<color=red>" + maxDefense.ToString () + "(" + baseMaxDefense.ToString () + ")</color>" + lineBreak;
+		}
+		if (damage == baseDamage) {
+			output += "Damage: " + damage.ToString () + lineBreak;
+		} else if (damage > baseDamage) {
+			output += "Damage: <color=green>" + damage.ToString () + "(" + baseDamage.ToString () + ")</color>" + lineBreak;
+		} else if (damage < baseDamage) {
+			output += "Damage: <color=red>" + damage.ToString () + "(" + baseDamage.ToString () + ")</color>" + lineBreak;
+		}
+		if (move == baseMove) {
+			output += "Move: " + move.ToString () + lineBreak;
+		} else if (move > baseMove) {
+			output += "Move: <color=green>" + move.ToString () + "(" + baseMove.ToString () + ")</color>" + lineBreak;
+		} else if (move < baseMove) {
+			output += "Move: <color=red>" + move.ToString () + "(" + baseMove.ToString () + ")</color>" + lineBreak;
+		}
+		if (currentHP == maxHP) {
+			output += "<color=green>Hit Points: " + currentHP.ToString() + "/</color>";
+		} else if (currentHP < maxHP / 3) {
+			output += "<color=red>Hit Points: " + currentHP.ToString() + "/</color>";
+		} else {
+			output += "<color=yellow>Hit Points: " + currentHP.ToString() + "/</color>";
+		}
+		if (maxHP == baseMaxHP) {
+			output +=  maxHP.ToString () + lineBreak;
+		} else if (maxHP > baseMaxHP) {
+			output += "<color=green>" + maxHP.ToString () + "(" + baseMaxHP.ToString () + ")</color>" + lineBreak;
+		} else if (maxHP < baseMaxHP) {
+			output += "<color=red>" + maxHP.ToString () + "(" + baseMaxHP.ToString () + ")</color>" + lineBreak;
+		}
+		if (hPRegen == baseHPRegen) {
+			output += "HP Regen: " + hPRegen.ToString () + lineBreak;
+		} else if (hPRegen > baseHPRegen) {
+			output += "HP Regen: <color=green>" + hPRegen.ToString () + "(" + baseHPRegen.ToString () + ")</color>" + lineBreak;
+		} else if (hPRegen < baseHPRegen) {
+			output += "HP Regen: <color=red>" + hPRegen.ToString () + "(" + baseHPRegen.ToString () + ")</color>" + lineBreak;
+		}
+		if (currentEnergy == maxEnergy) {
+			output += "<color=green>Energy: " + currentEnergy.ToString() + "/</color>";
+		} else if (currentEnergy < maxEnergy / 3) {
+			output += "<color=red>Energy: " + currentEnergy.ToString() + "/</color>";
+		} else {
+			output += "<color=yellow>Energy: " + currentEnergy.ToString() + "/</color>";
+		}
+		if (maxEnergy == baseMaxEnergy) {
+			output +=  maxEnergy.ToString () + lineBreak;
+		} else if (maxEnergy > baseMaxEnergy) {
+			output += "<color=green>" + maxEnergy.ToString () + "(" + baseMaxEnergy.ToString () + ")</color>" + lineBreak;
+		} else if (maxEnergy < baseMaxHP) {
+			output += "<color=red>" + maxEnergy.ToString () + "(" + baseMaxEnergy.ToString () + ")</color>" + lineBreak;
+		}
+		if (energyRegen == baseEnergyRegen) {
+			output += "Energy Regen: " + energyRegen.ToString () + lineBreak;
+		} else if (energyRegen > baseEnergyRegen) {
+			output += "Energy Regen: <color=green>" + energyRegen.ToString () + "(" + baseEnergyRegen.ToString () + ")</color>" + lineBreak;
+		} else if (energyRegen < baseEnergyRegen) {
+			output += "Energy Regen: <color=red>" + energyRegen.ToString () + "(" + baseEnergyRegen.ToString () + ")</color>" + lineBreak;
+		}
+		output += lineBreak + "Equipment:" + lineBreak;
+		foreach (Item i in inventory) {
+			output += i.itemName + lineBreak;
+		}
+		output += lineBreak + "Abilities:" + lineBreak;
+		foreach (PCHandler.Ability a in abilityList) {
+			output += PCHandler.getAbilityName(a) + lineBreak;
+		}
+		return output;
+
+	}
 
 
 }

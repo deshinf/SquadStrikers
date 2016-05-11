@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class ActionItem : Item {
+public abstract class ActionItem : Item {
 
 	public string itemClass; //Determines the basic action this item does.
 	public virtual PCHandler.Action CreateAction () {

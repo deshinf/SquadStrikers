@@ -4,6 +4,7 @@ using System.Collections;
 public class AncientMagic : ActionItem {
 
 	public int charges;
+	public int maxCharges;
 	public bool isActive;
 	public int passiveExtent;
 	public int perChargeDischargeExtent, baseDischargeExtent;
@@ -21,11 +22,20 @@ public class AncientMagic : ActionItem {
 
 	// Use this for initialization
 	void Start () {
-	
+		charges = maxCharges;
 	}
 	
 	// Update is called once per frame
 	void Update () {
 	
+	}
+
+	public override string ToDisplayString ()
+	{
+		string lineBreak = System.Environment.NewLine;
+		string output = itemName + "(" + itemClass + "):" + lineBreak + description + lineBreak;
+		output += (isActive ? "Currently Inactive" : "<color=green> Active</color>") + lineBreak;
+		output += "Charges: " + charges + "/" + maxCharges;
+		return output;
 	}
 }

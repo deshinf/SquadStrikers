@@ -41,6 +41,8 @@ public abstract class Item : MonoBehaviour {
 	void Start () {
 		
 	}
+
+	public abstract string ToDisplayString ();
 	
 	// Update is called once per frame
 	void Update () {

@@ -1,4 +1,5 @@
 ﻿0.1.2:
+
 Changed sizes of UI elements to better work with varied resolutions
 Cleaned up display of Message Log at bottom of screen (removed jerkiness).
 Fixed bug where enemies moving onto Substance X could collect it for you.
@@ -10,4 +11,22 @@ Added hotkeys.
 Known issues:
 Hotkeys wipe left hand stat bar display.
 Bow Mastery and Power Blow Bonuses not shown on left hand stat bar.
-Cannot cancel move actions
+Cannot cancel move actions.
+
+0.1.3:
+
+Added pause menu. Moved quit button to it.
+Left hand stat bar now recognizes and displays the difference between base and conditional attributes.
+Left hand stat bar now colour codes HP and Energy displays based on amount remaining.
+Left hand stat bar now adds up unit and weapon stats so you don't have to.
+Can now end turn whenever (when choosing an action or a target). This defaults the choice to doing nothing.
+Restructured the code for the Left Hand Side Display allowing it to be extended more easily.
+Fixed Action button sizes to scale appropriately for low screen resolution.
+Fixed hotkeys wiping stat display.
+Fixed Bow Mastery and Power blow bonuses displays.
+Left hand stat bar now displays target information on mouse over.
+
+Known issues:
+Cannot cancel move actions.
+Cancel menu shouldn't exist (instead keep all possible actions visible and allow changing actions in one click.
+Should require two presses or allow self targeting for untargetted abilities.
