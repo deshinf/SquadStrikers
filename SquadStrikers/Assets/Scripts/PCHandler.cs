@@ -7,7 +7,26 @@ public partial class PCHandler : Unit {
 
 	public AbilityGrid grid;
 	public bool ascended;
+	[SerializeField] private int  stoneDamageBonus;
+	[SerializeField] private bool _canMove = true;
+	public List<Item> startingInventory;
+	public List<Item> inventory;
+	public AncientMagic ancientMagic;
+	public bool carefulStrikeActive = false;
+	public bool strengthReserveActive = false;
+	public bool suppressInitialization = false;
+	public bool allOutDefenseActive = false;
+	public bool deadeyeActive = false;
+	public bool powerBlowActive = false;
+	public List<Ability> abilityList = new List<Ability>{Ability.None };
+	public Sprite baseSprite;
+	public bool dead; //TODO: Do something about this.
+	public Sprite fatiguedSprite; //Sprite used when unit has already moved.
+	//This is the class name that the character will be created with.
+	public string initializationClass;
+	[SerializeField] private CharacterClass _characterClass;
 
+	[Serializable]
 	public struct AbilityTransition {
 		public Ability initial;
 		public Ability final;
@@ -17,7 +36,7 @@ public partial class PCHandler : Unit {
 		}
 	}
 
-
+	[Serializable]
 	public class AbilityGrid {
 		public List<AbilityTransition> transitions;
 		public AbilityGrid(List<AbilityTransition> transitionsList) {
@@ -70,7 +89,6 @@ public partial class PCHandler : Unit {
 		}
 	}
 
-	private int  stoneDamageBonus;
 	//Unlike Enemies, player character's stats are calculated from their class's base stats plus modifiers, rather than set directly.
 	//The baseStatName represents the characters stats with no conditional terms added. The statName terms include all conditional modifiers.
 	public override int attack {
@@ -262,7 +280,6 @@ public partial class PCHandler : Unit {
 			}
 		}
 	}
-	private bool _canMove = true;
 	public int inventoryCapacity { get{
 			int output = characterClass.inventoryCapacity;
 			if (hasAbility (Ability.HeavyLifter)) {
@@ -273,14 +290,8 @@ public partial class PCHandler : Unit {
 		set { throw new Exception ("Should not edit player stats directly. Add variable to represent effect."); }  }
 	public int remainingInventory { get { return inventoryCapacity - inventory.Count; } }
 
-	public List<Item> startingInventory;
-	public List<Item> inventory;
-	public AncientMagic ancientMagic;
-	public bool carefulStrikeActive = false;
-	public bool strengthReserveActive = false;
-	public bool allOutDefenseActive = false;
-	public bool deadeyeActive = false;
-	public bool powerBlowActive = false;
+
+	[Serializable]
 	public enum Ability { None,
 		SwordMastery,AxeMastery,SpearMastery,MaceMastery,BowMastery,//5
 		Isolationist, CarefulStrike,StrenthReserves,CrowdBrawler,FormationFighter,//10
@@ -292,8 +303,6 @@ public partial class PCHandler : Unit {
 		Heal,GroupHeal,GreaterHealing,FullRestore,EfficientHealer,//35
 		MagicalReserves1,MagicalReserves2,MagicalReserves3,ManaCycling,//39
 	}
-
-	public List<Ability> abilityList = new List<Ability>{Ability.None };
 
 	public bool hasAbility(Ability a) {
 		return abilityList.Contains (a);
@@ -371,9 +380,6 @@ public partial class PCHandler : Unit {
 		item.owner = this;
 	}
 
-	public Sprite baseSprite;
-	public bool dead; //TODO: Do something about this.
-	public Sprite fatiguedSprite; //Sprite used when unit has already moved.
 	public bool canMove {
 		get {
 			return _canMove;
@@ -389,11 +395,6 @@ public partial class PCHandler : Unit {
 			}
 		}
 	}
-
-	//This is the class name that the character will be created with.
-	public string initializationClass;
-
-	private CharacterClass _characterClass;
 
 	public void endTurn() {
 		BoardHandler board = GameObject.FindGameObjectWithTag ("BoardHandler").GetComponent<BoardHandler> ();
@@ -460,30 +461,34 @@ public partial class PCHandler : Unit {
 	}
 
 	void Init (string cClass) {
-		characterClass = CharacterClass.classList [cClass];
-		abilityList = characterClass.startingAbilities;
-		fullHeal();
-		fullEnergy();
-		isFriendly = true;
-		grid = characterClass.grid.MakeConcrete ();
-		Debug.Log ("Made Grid");
+		if (!suppressInitialization) {
+			characterClass = CharacterClass.classList [cClass];
+			abilityList = characterClass.startingAbilities;
+			fullHeal ();
+			fullEnergy ();
+			isFriendly = true;
+			grid = characterClass.grid.MakeConcrete ();
+			Debug.Log ("Made Grid");
+		}
 	}
 
 	// Use this for initialization
 	void Start () {
-		gameObject.transform.Translate (0f, 0f, -0.1f);
-		Init (initializationClass);
-		foreach (Item i in startingInventory) {
-			Item item = ((GameObject)(Instantiate (i.gameObject, new Vector3 (0f, 0f, 0f), Quaternion.identity))).GetComponent<Item> ();
-			item.owner = this;
-			item.transform.parent = transform;
-			inventory.Add (item);
+		if (!suppressInitialization) {
+			gameObject.transform.Translate (0f, 0f, -0.1f);
+			Init (initializationClass);
+			foreach (Item i in startingInventory) {
+				Item item = ((GameObject)(Instantiate (i.gameObject, new Vector3 (0f, 0f, 0f), Quaternion.identity))).GetComponent<Item> ();
+				item.owner = this;
+				item.transform.parent = transform;
+				inventory.Add (item);
+			}
 		}
 	}
 
 	public override void OnMouseDown()
 	{
-		Debug.Log ("Character " + this.unitName + " clicked on.");
+		//Debug.Log ("Character " + this.unitName + " clicked on.");
 		if (targeting == Targeting.MovementTargeting) {
 			GameObject.FindGameObjectWithTag ("BoardHandler").GetComponent<BoardHandler> ().KeepSelectedStill();
 		} else if (targeting == Targeting.HostileTargeting || targeting == Targeting.FriendlyTargeting) {
@@ -925,4 +930,133 @@ public partial class PCHandler : Unit {
 	}
 
 
+
+	//======================================================IO Here=============================================================//
+	[Serializable]
+	public class PCHandlerSave {
+		public AbilityGrid grid;
+		public bool ascended;
+		public int  stoneDamageBonus;
+		public int currentHP;
+		public int currentEnergy;
+		public bool _canMove = true;
+		public List<Item.ItemSave> inventory;
+		public AncientMagic.AncientMagicSave ancientMagic;
+		public bool carefulStrikeActive = false;
+		public bool strengthReserveActive = false;
+		public bool allOutDefenseActive = false;
+		public bool deadeyeActive = false;
+		public bool powerBlowActive = false;
+		public List<Ability> abilityList = new List<Ability>{Ability.None };
+		//public Sprite baseSprite;
+		public bool dead; //TODO: Do something about this.
+		//public Sprite fatiguedSprite; //Sprite used when unit has already moved.
+		public CharacterClass _characterClass;
+		public ColorSave basicColour = new ColorSave(Color.white);
+		public ColorSave friendlyTargetingColour = new ColorSave(Color.green);
+		public ColorSave hostileTargetingColour = new ColorSave(Color.red);
+		public ColorSave movementTargetingColour = new ColorSave(Color.yellow);
+		public string _unitName;
+
+		public PCHandlerSave (PCHandler pc) {
+			this.grid = pc.grid;
+			this.ascended = pc.ascended;
+			this.currentHP = pc.currentHP;
+			this.currentEnergy = pc.currentEnergy;
+			this.stoneDamageBonus = pc.stoneDamageBonus;
+			this._canMove = pc._canMove;
+			this.inventory = new List<Item.ItemSave>();
+			foreach(Item i in pc.inventory) {
+				inventory.Add(Item.ItemSave.CreateFromItem(i));
+			}
+			if (pc.ancientMagic != null) {
+				this.ancientMagic = new AncientMagic.AncientMagicSave(pc.ancientMagic);
+			} else {
+				this.ancientMagic = null;
+			}
+			this.carefulStrikeActive = pc.carefulStrikeActive;
+			this.strengthReserveActive = pc.strengthReserveActive;
+			this.allOutDefenseActive = pc.allOutDefenseActive;
+			this.deadeyeActive = pc.deadeyeActive;
+			this.powerBlowActive = pc.powerBlowActive;
+			this.abilityList = pc.abilityList;
+			//this.baseSprite = pc.baseSprite;
+			this.dead = pc.dead;
+			//this.fatiguedSprite = pc.fatiguedSprite;
+			this._characterClass = pc._characterClass;
+			this.basicColour = new ColorSave(pc.basicColour);
+			this.friendlyTargetingColour = new ColorSave(pc.friendlyTargetingColour);
+			this.hostileTargetingColour = new ColorSave(pc.hostileTargetingColour);
+			this.movementTargetingColour = new ColorSave(pc.movementTargetingColour);
+			this._unitName = pc.unitName;
+
+		}
+
+		[Serializable]
+		public struct ColorSave
+		{
+			float r,g,b,a;
+
+			public ColorSave (UnityEngine.Color color) {
+				this.r = color.r;
+				this.g = color.g;
+				this.b = color.b;
+				this.a = color.a;
+			}
+
+			public UnityEngine.Color ToColor () {
+				return new UnityEngine.Color (r, g, b, a);
+			}
+		}
+
+		public GameObject ToGameObject() {
+			GameObject output = new GameObject (_unitName);
+			output.AddComponent<PCHandler> ();
+			output.AddComponent<SpriteRenderer> ();
+			SpriteRenderer sr = output.GetComponent<SpriteRenderer> ();
+			sr.sortingLayerName = "Units";
+			//sr.sprite = baseSprite;
+			output.AddComponent<BoxCollider2D> ();
+			BoxCollider2D bc2 = output.GetComponent<BoxCollider2D> ();
+			bc2.offset = new Vector2 (0f, 0f);
+			bc2.size = new Vector2 (BoardHandler.tileSize * .96f, BoardHandler.tileSize * .96f);
+			PCHandler pch = output.GetComponent<PCHandler> ();
+			pch.grid = this.grid;
+			pch.ascended = this.ascended;
+			pch.stoneDamageBonus = this.stoneDamageBonus;
+			pch._canMove = this._canMove;
+			pch.inventory = new List<Item>();
+			foreach(Item.ItemSave i in this.inventory) {
+				pch.inventory.Add(i.ToGameObject().GetComponent<Item>());
+			}
+			foreach (Item i in pch.inventory) {
+				i.owner = pch;
+			}
+			if (this.ancientMagic != null) {
+				pch.ancientMagic = (this.ancientMagic).ToGameObject ().GetComponent<AncientMagic> ();
+			} else {
+				pch.ancientMagic = null;
+			}
+			pch.carefulStrikeActive = this.carefulStrikeActive;
+			pch.strengthReserveActive = this.strengthReserveActive;
+			pch.allOutDefenseActive = this.allOutDefenseActive;
+			pch.deadeyeActive = this.deadeyeActive;
+			pch.powerBlowActive = this.powerBlowActive;
+			pch.abilityList = this.abilityList;
+			//pch.baseSprite = this.baseSprite;
+			pch.dead = this.dead;
+			//pch.fatiguedSprite = this.fatiguedSprite;
+			pch._characterClass = this._characterClass;
+			pch.basicColour = this.basicColour.ToColor ();
+			pch.friendlyTargetingColour = this.friendlyTargetingColour.ToColor();
+			pch.hostileTargetingColour = this.hostileTargetingColour.ToColor();
+			pch.movementTargetingColour = this.movementTargetingColour.ToColor();
+			pch.unitName = this._unitName;
+			pch.currentHP = this.currentHP;
+			pch.currentEnergy = this.currentEnergy;
+			pch.suppressInitialization = true;
+			pch.isFriendly = true;
+			return output;
+		}
+	}
 }

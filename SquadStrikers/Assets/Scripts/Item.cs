@@ -48,4 +48,22 @@ public abstract class Item : MonoBehaviour {
 	void Update () {
 	
 	}
+
+
+	//======================================================IO Here=============================================================//
+
+	[System.Serializable]
+	public abstract class ItemSave {
+		public abstract GameObject ToGameObject ();
+
+		public static ItemSave CreateFromItem(Item i) {
+			if (i is Weapon) {
+				return new Weapon.WeaponSave ((Weapon)i);
+			} else if (i is AncientMagic) {
+				return new AncientMagic.AncientMagicSave ((AncientMagic)i);
+			} else {
+				throw new UnityException ("Don't know how to load this item type:" + i.itemName);
+			}
+		}
+	}
 }

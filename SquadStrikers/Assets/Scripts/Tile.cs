@@ -5,6 +5,7 @@ using System.Collections;
 
 public class Tile : MonoBehaviour {
 	public bool isPassable;
+	public string tileName;
 	public int movementCost; //Set to 1 for impassible terrain.
 	public Sprite baseSprite;
 	public bool blocksLineOfFire;

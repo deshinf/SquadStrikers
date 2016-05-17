@@ -17,4 +17,7 @@ public abstract class ActionItem : Item {
 	void Update () {
 	
 	}
+
+	[System.Serializable]
+	public abstract class ActionItemSave : ItemSave { }
 }

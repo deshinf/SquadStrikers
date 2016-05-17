@@ -34,7 +34,7 @@ public class CharacterCreator : MonoBehaviour {
 		Assert.IsNotNull (activeToggle);
 		string weaponName = activeToggle.gameObject.transform.Find ("Label").GetComponent<Text> ().text;
 		GameObject output;
-		if (!GameObject.FindGameObjectWithTag("PlayerTeam").GetComponent<ItemDatabase>().GetItemByName(weaponName, out output)) Assert.IsTrue (false);
+		if (!GameObject.FindGameObjectWithTag("PlayerTeam").GetComponent<Database>().GetItemByName(weaponName, out output)) Assert.IsTrue (false);
 		return output.GetComponent<Weapon>();
 	}
 

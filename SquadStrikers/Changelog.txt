@@ -8,11 +8,6 @@ Fixed bug where score undefined when the score display tried to render the first
 Added More/Less Feature to message log.
 Added hotkeys.
 
-Known issues:
-Hotkeys wipe left hand stat bar display.
-Bow Mastery and Power Blow Bonuses not shown on left hand stat bar.
-Cannot cancel move actions.
-
 0.1.3:
 
 Added pause menu. Moved quit button to it.
@@ -26,7 +21,13 @@ Fixed hotkeys wiping stat display.
 Fixed Bow Mastery and Power blow bonuses displays.
 Left hand stat bar now displays target information on mouse over.
 
+0.1.4
+
+Added permadeath save games and all required support for it.
+
 Known issues:
 Cannot cancel move actions.
 Cancel menu shouldn't exist (instead keep all possible actions visible and allow changing actions in one click.
-Should require two presses or allow self targeting for untargetted abilities.
+Should require two presses or allow self targeting for untargetted abilities).
+Right clicking on items should bring up on Left Hand panel.
+Mouse over enemy/item to see on left hand panel.

@@ -81,4 +81,49 @@ public class Weapon : ActionItem {
 	void Update () {
 	
 	}
+
+	//======================================================IO Here=============================================================//
+
+	[System.Serializable]
+	public class WeaponSave : ActionItemSave {
+		public string itemName;
+		public int _charges;
+		//Owner takes possession of this instead.
+//		public int _owner;
+		public bool _isOnFloor;
+
+		public WeaponSave(Weapon w) {
+			itemName = w.itemName;
+			_charges = w._charges;
+//			if (w.owner == null) {
+//				_owner = -1;
+//			} else {
+//				_owner = -2;	
+//				for (int i = 0; i < PlayerTeamScript.TEAM_SIZE; i++) {
+//					if (w.owner == GameObject.FindGameObjectWithTag("PlayerTeam").GetComponent<PlayerTeamScript>().getTeamMember(i)) {
+//						_owner = i;
+//					}
+//				}
+//				Assert.IsFalse(_owner == -2);
+//			}
+			_isOnFloor = w.isOnFloor;
+		}
+
+		public override GameObject ToGameObject () {
+			GameObject prefab;
+			if (!GameObject.FindGameObjectWithTag ("PlayerTeam").GetComponent<Database> ().GetItemByName (itemName, out prefab)) throw new System.Exception ("Item not in database");
+			GameObject output = ((GameObject)(Instantiate (prefab, new Vector3 (0f, 0f, 0f), Quaternion.identity)));
+			//if (_owner == -1) {
+			//	output.GetComponent<Item> ().owner = null;
+			//} else {
+			//	output.GetComponent<Item> ().owner = GameObject.FindGameObjectWithTag ("PlayerTeam").GetComponent<PlayerTeamScript> ().getTeamMember (_owner);
+			//}
+			output.GetComponent<Item> ().isOnFloor = _isOnFloor;
+			if (!_isOnFloor) {
+				output.GetComponent<SpriteRenderer> ().enabled = false;
+			}
+			output.GetComponent<Weapon> ().charges = _charges;
+			return output;
+		}
+	}
 }

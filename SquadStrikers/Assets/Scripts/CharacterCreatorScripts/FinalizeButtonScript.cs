@@ -21,19 +21,19 @@ public class FinalizeButtonScript : MonoBehaviour {
 	{
 		myButton = GetComponent<Button>(); // <-- you get access to the button component here
 		myButton.onClick.AddListener( () => finalizeCharacterCreation());  // <-- you assign a method to the button OnClick event here
-		Debug.Log("Message");
 	}
 
 	void finalizeCharacterCreation() {
-		Debug.Log("Message");
+		PlayerTeamScript team = GameObject.FindGameObjectWithTag ("PlayerTeam").GetComponent<PlayerTeamScript> ();
 		foreach ( GameObject g in GameObject.FindGameObjectsWithTag("CharacterCreationPanel")) {
-			PlayerTeamScript team = GameObject.FindGameObjectWithTag ("PlayerTeam").GetComponent<PlayerTeamScript> ();
 			CharacterCreator cc = g.GetComponent<CharacterCreator> ();
 			GameObject created = cc.CreateCharacter ();
 			int i = cc.index;
 			team.defaultTeam [i] = created;
 		}
+		team.saveName = GameObject.FindGameObjectWithTag ("SaveNamePanel").GetComponent<InputField> ().text;
 		//SceneManager.LoadScene ("LevelUp");
+		GameObject.FindGameObjectWithTag ("IOHandler").GetComponent<IOScript> ().setUpToLoadIfExists();
 		SceneManager.LoadScene ("MainScene");
 	}
 }

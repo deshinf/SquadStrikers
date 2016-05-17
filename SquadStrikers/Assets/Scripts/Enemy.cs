@@ -1,10 +1,11 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.Assertions;
 
 public class Enemy : Unit {
 
-	public static float attackWaitTime = 1f; //Time of pause after attack in seconds.
+//	public static float attackWaitTime = 1f; //Time of pause after attack in seconds.
 
 	// Use this for initialization
 	void Start () {
@@ -254,4 +255,34 @@ public class Enemy : Unit {
 		gainEnergy (energyRegen);
 	}
 
+
+
+
+	//======================================================IO Here=============================================================//
+	[System.Serializable]
+	public class EnemySave {
+		public int hP;
+		public int energy;
+		public AIType ai; //As this can be changed.
+		public string _unitName;
+
+		public EnemySave (Enemy e) {
+			this.hP = e.currentHP;
+			this.energy = e.currentEnergy;
+			this.ai = e.aIType;
+			this._unitName = e.unitName;
+		}
+
+		public GameObject ToGameObject(BoardHandler.Coords c) {
+
+			GameObject prefab;
+			Assert.IsTrue(GameObject.FindGameObjectWithTag("PlayerTeam").GetComponent<Database>().GetEnemyByName(_unitName, out prefab));
+			GameObject output = ((GameObject) Instantiate (prefab, new Vector2 (c.x * BoardHandler.tileSize, c.y * BoardHandler.tileSize), Quaternion.identity));
+			Enemy e = output.GetComponent<Enemy> ();
+			e.currentHP = this.hP;
+			e.currentEnergy = this.energy;
+			e.aIType = this.ai;
+			return output;
+		}
+	}
 }

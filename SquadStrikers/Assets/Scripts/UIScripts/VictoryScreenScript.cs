@@ -18,7 +18,7 @@ public class VictoryScreenScript : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-	
+		GameObject.FindGameObjectWithTag ("IOHandler").GetComponent<IOScript>().DeleteSave ();
 	}
 	
 	// Update is called once per frame

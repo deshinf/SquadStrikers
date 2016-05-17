@@ -11,11 +11,12 @@ public class BoardHandler : MonoBehaviour {
 
 	//A by-value pair of ints representing a position on the gameBoard in squares.
 	public GameObject defaultPlayerTeam;
-
+	public bool suppressInitialization = false;
 	public static BoardHandler GetBoardHandler() {
-		return GameObject.FindGameObjectWithTag ("Board Handler").GetComponent<BoardHandler> ();
+		return GameObject.FindGameObjectWithTag ("BoardHandler").GetComponent<BoardHandler> ();
 	}
 
+	[System.Serializable]
 	public struct Coords {
 		public int x,y;
 		public override bool Equals(System.Object obj) 
@@ -54,7 +55,13 @@ public class BoardHandler : MonoBehaviour {
 		{
 			return new Coords {x = a.x - b.x, y = a.y - b.y};
 		}
+		public override string ToString ()
+		{
+			return "(" + x +"," + y + ")";
+		}
 	}
+
+	[System.Serializable]
 	public enum GameStates {MovementMode, ActionMode, EnemyTurn, TargetMode};
 	//Movement Mode is when it is your turn and you are selecting a unit to move.
 	//Action Mode happens after you have moved and forces you to select an action.
@@ -77,7 +84,7 @@ public class BoardHandler : MonoBehaviour {
 	public GameStates gameState {
 		get { return _currentGameState; }
 		set {
-			Debug.Log (_currentGameState.ToString () + value.ToString ());
+			//Debug.Log (_currentGameState.ToString () + value.ToString ());
 			if (_currentGameState == value) {
 				return;
 			} else {
@@ -103,9 +110,11 @@ public class BoardHandler : MonoBehaviour {
 						GameObject.FindGameObjectWithTag ("ActionBar").GetComponent<ActionBar> ().Empty ();
 						_currentGameState = value;
 						GameObject.FindGameObjectWithTag ("StatsBar").GetComponent<StatsBar> ().Clear ();
+						GameObject.FindGameObjectWithTag ("IOHandler").GetComponent<IOScript> ().SaveGame ();
 					} else if (_currentGameState == GameStates.EnemyTurn) {
 						_currentGameState = value;
 						GameObject.FindGameObjectWithTag ("PlayerTeam").GetComponent<PlayerTeamScript> ().NewTurn ();
+						GameObject.FindGameObjectWithTag ("IOHandler").GetComponent<IOScript> ().SaveGame ();
 						turnNumber += 1;
 						SpawnChasers ();
 						GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().Log ("Turn has begun. Turn number = " + (turnNumber).ToString ());
@@ -160,6 +169,7 @@ public class BoardHandler : MonoBehaviour {
 	public float minWallDensity = 0.1f;
 	public float maxWallDensity = 0.2f;
     public const float tileSize=0.5f; //Number of pixels per tile.
+
     public class tileState
     {
         public Tile tile;
@@ -186,7 +196,100 @@ public class BoardHandler : MonoBehaviour {
 			Destroy(substanceX.gameObject);
 			substanceX = null;
 		}
-    }
+
+		public void destroyAllButPlayer () {
+			Destroy (tile.gameObject);
+			if (item != null) {
+				Destroy (item.gameObject);
+			}
+			if (unit != null && unit is Enemy) {
+				Destroy (unit.gameObject);
+			}
+			if (substanceX != null) {
+				Destroy (substanceX.gameObject);
+			}
+		}
+
+		[System.Serializable]
+		public class tileStateSave {
+			
+			public string tile;
+			public Enemy.EnemySave enemy;
+			public int player; //Index of player, saved separately. -1 means no player.
+			//public List<Item> items; 
+			public Item.ItemSave item;
+			public int substanceX; //score collectibles
+
+			public tileStateSave (tileState ts) {
+				if (ts.tile) {
+					this.tile = ts.tile.tileName;
+				} else {
+					this.tile = null;
+				}
+				if (ts.unit && ts.unit is Enemy) {
+					this.enemy = new Enemy.EnemySave((Enemy) ts.unit);
+				} else {
+					this.enemy = null;
+				}
+				if (!(ts.unit && ts.unit is PCHandler)) {
+					this.player = -1; //No player
+				} else {
+					this.player = -2; //Error code if never changed.
+					PlayerTeamScript pts = GameObject.FindGameObjectWithTag("PlayerTeam").GetComponent<PlayerTeamScript>();
+					for (int i = 0; i < PlayerTeamScript.TEAM_SIZE; i++) {
+						if (pts.getTeamMember(i) == ((PCHandler) ts.unit)) {
+							this.player = i;
+						}
+					}
+					Assert.IsFalse(this.player == -2);
+				}
+				if (ts.item) {
+					this.item = Item.ItemSave.CreateFromItem(ts.item);
+				} else {
+					this.item = null;
+				}
+				if (ts.substanceX) {
+					this.substanceX = ts.substanceX.amount;
+				} else {
+					this.substanceX = 0;
+				}
+			}
+			public tileState ToTileState(Coords c) {
+				tileState output = new tileState (null,null);
+				if (this.tile != null) {
+					GameObject newTile;
+					Assert.IsTrue(GameObject.FindGameObjectWithTag("PlayerTeam").GetComponent<Database>().GetTileByName(this.tile, out newTile));
+					output.tile = ((GameObject) Instantiate (newTile, new Vector2 (c.x * tileSize, c.y * tileSize), Quaternion.identity)).GetComponent<Tile>();
+				} else {
+					throw new UnityException("NO TILE FOUND AT (" + c.x + "," + c.y + ")");
+					//output.tile = null;
+				}
+				if (this.enemy != null) {
+					output.unit = enemy.ToGameObject (c).GetComponent<Enemy> ();
+				} else if (this.player != -1) {
+					Debug.Log ("Player " + player + "loaded at (" + c.x + "," + c.y + ")");
+					output.unit = GameObject.FindGameObjectWithTag ("PlayerTeam").GetComponent<PlayerTeamScript> ().getTeamMember (this.player);
+					output.unit.gameObject.transform.position = new Vector3 (c.x * tileSize, c.y * tileSize, -0.1f);
+					Debug.Log (output.unit.unitName + " Now at (" + output.unit.gameObject.transform.position.x + "," + output.unit.gameObject.transform.position.y + ")");
+				} else {
+					output.unit = null;
+				}
+				if (this.item != null) {
+					output.item = this.item.ToGameObject ().GetComponent<Item> ();
+					output.item.gameObject.transform.position = new Vector3 (c.x * tileSize, c.y * tileSize, -0.1f);
+				} else {
+					output.item = null;
+				}
+				if (this.substanceX > 0) {
+					output.substanceX = ((GameObject) Instantiate (GetBoardHandler().substanceX, new Vector2 (c.x * tileSize, c.y * tileSize), Quaternion.identity)).GetComponent<SubstanceX>();
+					output.substanceX.amount = this.substanceX;
+				} else {
+					output.substanceX = null;
+				}
+				return output;
+			}
+		}
+	}
 		
 	[SerializeField] private tileState[,] gameBoard;
 	public Coords selected { get; private set;}
@@ -335,6 +438,7 @@ public class BoardHandler : MonoBehaviour {
 			}
 			is_selected = true;
 			selected = FindUnit (unit);
+			//Debug.Log ("Selection at " + selected.ToString());
 			GameObject.FindGameObjectWithTag ("StatsBar").GetComponent<StatsBar> ().displayStats (unit);
 			highlightSquares ();
 		}
@@ -348,27 +452,28 @@ public class BoardHandler : MonoBehaviour {
 		List<Tuple<Coords,int>> stillToCheck = new List<Tuple<Coords,int>>();
 		stillToCheck.Add(new Tuple<Coords, int>(selected,move));
 		//Debug.Log("Adding (" + selected.x.ToString() + "," + selected.y.ToString() + ") with move " + move.ToString());
+		HashSet<Tile> haveDoneThis = new HashSet<Tile> ();
 
 		while (stillToCheck.Count > 0) {
 			int index = 0;
 			Coords current = stillToCheck [index].Item1;
 			int remainingMove = stillToCheck [index].Item2;
-			HashSet<Tile> haveDoneThis = new HashSet<Tile> ();
+			//Debug.Log ("Current is " + current.ToString ());
 			tileState tState = getTileState (current.x, current.y);
 			if ((!tState.unit || tState.unit.isFriendly) && tState.tile.isPassable) {
-				if (current != selected) remainingMove = remainingMove - tState.tile.movementCost;
+				if (current != selected)
+					remainingMove = remainingMove - tState.tile.movementCost;
 				if (remainingMove > -1 && !tState.unit) { //Here it would be possible to move to the square
-					if (!haveDoneThis.Contains(tState.tile)) {
+					if (!haveDoneThis.Contains (tState.tile)) {
 						tState.tile.isHighlighted = true;
-						haveDoneThis.Add(tState.tile);
-						//Debug.Log("Highlighting (" + current.x.ToString() + "," + current.y.ToString() + ")");
+						//Debug.Log ("Highlighting at " + current.ToString ());
+						haveDoneThis.Add (tState.tile);
 					}
 				}
 				if (remainingMove > 0) { //Here it would be possible to move past the square.
-					foreach (Coords c in new Coords[] {current + Coords.UP, current + Coords.DOWN, current + Coords.LEFT, current + Coords.RIGHT})
-					{
-						if (inBounds(c)) {
-							stillToCheck.Add(new Tuple<Coords, int>(c,remainingMove));
+					foreach (Coords c in new Coords[] {current + Coords.UP, current + Coords.DOWN, current + Coords.LEFT, current + Coords.RIGHT}) {
+						if (inBounds (c)) {
+							stillToCheck.Add (new Tuple<Coords, int> (c, remainingMove));
 							//Debug.Log("Adding (" + c.x.ToString() + "," + c.y.ToString() + ") from (" +
 							//	current.x.ToString() + "," + current.y.ToString() + ") with remaining move" +
 							//	remainingMove.ToString());
@@ -376,6 +481,8 @@ public class BoardHandler : MonoBehaviour {
 						}
 					}
 				}
+			} else {
+				//Debug.Log ("No good " + current.ToString ());
 			}
 			stillToCheck.RemoveAt (index);
 		}
@@ -430,21 +537,23 @@ public class BoardHandler : MonoBehaviour {
 
 	// Create Blank Map, Randomize it, then add essentials.
 	void Init (int height, int width) {
-		mapHeight = height;
-		mapWidth = width;
-		gameBoard = new tileState[mapHeight, mapWidth];
-		for (int x = 0; x < mapWidth; x += 1) {
-			for (int y = 0; y < mapHeight; y += 1) {
-				Tile tile = ((GameObject) Instantiate (emptyTile, new Vector2 (x * tileSize, y * tileSize), Quaternion.identity)).GetComponent<Tile>();
-				tileState tS = new tileState (tile.GetComponent<Tile> (), null as Unit);
-				gameBoard [x, y] = tS;
+		if (!suppressInitialization) {
+			mapHeight = height;
+			mapWidth = width;
+			gameBoard = new tileState[mapWidth, mapHeight];
+			for (int x = 0; x < mapWidth; x += 1) {
+				for (int y = 0; y < mapHeight; y += 1) {
+					Tile tile = ((GameObject) Instantiate (emptyTile, new Vector2 (x * tileSize, y * tileSize), Quaternion.identity)).GetComponent<Tile>();
+					tileState tS = new tileState (tile.GetComponent<Tile> (), null as Unit);
+					gameBoard [x, y] = tS;
+				}
 			}
-		}
-		Randomize ();
-		if (!isTraversable ()) {
-			GameObject.FindGameObjectWithTag ("PlayerTeam").GetComponent<PlayerTeamScript> ().depth -= 1;
-			SceneManager.LoadScene ("MainScene");
-			Debug.Log ("Could not traverse level.");
+			Randomize ();
+			if (!isTraversable ()) {
+				GameObject.FindGameObjectWithTag ("PlayerTeam").GetComponent<PlayerTeamScript> ().depth -= 1;
+				SceneManager.LoadScene ("MainScene");
+				Debug.Log ("Could not traverse level.");
+			}
 		}
 	}
 
@@ -1051,7 +1160,7 @@ public class BoardHandler : MonoBehaviour {
 	}
 
 	public Coords WhereToRunAwayFrom (Coords amHere, int move, Coords target) {
-		Debug.Log ("RUN!" + move.ToString());
+		//Debug.Log ("RUN!" + move.ToString());
 		for (int i = 0; i < move; i++) {
 			Coords moveVector = amHere - target;
 			List<Coords> moves = new List<Coords> ();
@@ -1128,7 +1237,7 @@ public class BoardHandler : MonoBehaviour {
 			foreach (Coords c in new[] {current+Coords.UP, current+Coords.DOWN, current + Coords.LEFT, current + Coords.RIGHT}) {
 				if (inBounds (c) && !alreadySeen.Contains (c)) {
 					alreadySeen.Add (c);
-					Debug.Log ("Looking at (" + c.x.ToString () + "," + c.y.ToString () + ")");
+					//Debug.Log ("Looking at (" + c.x.ToString () + "," + c.y.ToString () + ")");
 					int newMoveSpent = moveSpent + getTileState (c).tile.movementCost;
 					if (getTileState (c).unit && getTileState (c).unit is PCHandler) {
 						return stopPoint;
@@ -1230,7 +1339,7 @@ public class BoardHandler : MonoBehaviour {
 	}
 
 	public float minEnemyDensity (int depth) {
-		Debug.Log ("Depth " + depth.ToString ());
+		//Debug.Log ("Depth " + depth.ToString ());
 		//return 0f;
 		return 1f - Mathf.Pow (0.96f, (float)depth);
 	}
@@ -1316,7 +1425,7 @@ public class BoardHandler : MonoBehaviour {
 	}
 
 	public void BrownianMotion (Coords amHere, int move) {
-		Debug.Log ("Brownian" + move.ToString ());
+		//Debug.Log ("Brownian" + move.ToString ());
 		Coords target = amHere;
 		for (int i = 0; i < move; i++) {
 			List<Coords> moveCandidates = new List<Coords> ();
@@ -1337,7 +1446,7 @@ public class BoardHandler : MonoBehaviour {
 	private bool needToRefreshPlayerTeam = true;
 	public void Update () {
 		if (needToRefreshPlayerTeam) {
-			Debug.Log ("Update");
+			//Debug.Log ("Update");
 			GameObject.FindGameObjectWithTag ("PlayerTeam").GetComponent<PlayerTeamScript> ().NewLevel ();
 			needToRefreshPlayerTeam = false;
 		}
@@ -1362,4 +1471,101 @@ public class BoardHandler : MonoBehaviour {
 		return false;
 	}
 
+	//======================================================IO Here=============================================================//
+	[System.Serializable]
+	public class BoardHandlerSave {
+
+		//NOTE: GAME SHOULD NOT BE SAVED MID ACTION.
+
+
+//		public int ultimateSpawnTurn;
+//		public int chaserTurn;
+//		public int doubleChaserTurn;
+//		public int eliteChaserTurn;
+//		public GameObject chaser;
+//		public GameObject eliteChaser;
+//		public GameObject ultimateSpawn;
+//		public float itemSpawnDepthTolerance;
+//		public float enemySpawnDepthTolerance;
+
+
+		//This contains all of the state transition logic. State tranrsitions that aren't supposed to happen throw
+		//exceptions.
+//		private GameStates _currentGameState;
+
+
+//		public const int defaultMapHeight = 20;
+//		public const int defaultMapWidth = 20;
+//		public GameObject emptyTile;
+//		public GameObject wallTile;
+//		public GameObject substanceX;
+//		public GameObject[] spawnableEnemies;
+//		public float[] enemyStandardDepth;
+//		public float[] enemyRarity; //Lower is rarer.
+//		public GameObject[] spawnableItems;
+//		public float[] itemStandardDepth;
+//		public float[] itemRarity; //Lower is rarer.
+//		public GameObject goalTile; //These are the prefabs used for level generation.
+//		public float minWallDensity = 0.1f;
+//		public float maxWallDensity = 0.2f;
+//		public const float tileSize=0.5f; //Number of pixels per tile.
+
+
+
+		private int _turnNumber=1;
+		public int mapHeight;
+		public int mapWidth;
+		public tileState.tileStateSave[,] gameBoard;
+//		public Coords selected { get; private set;}
+//		private bool is_selected = false;
+
+
+
+		public BoardHandlerSave (BoardHandler bh) {
+			this._turnNumber = bh._turnNumber;
+			this.mapHeight = bh.mapHeight;
+			this.mapWidth = bh.mapWidth;
+			this.gameBoard = new tileState.tileStateSave[mapWidth,mapHeight];
+
+			for (int i = 0; i < mapWidth; i++) {
+				for (int j = 0; j < mapHeight; j++) {
+					this.gameBoard[i,j] = new tileState.tileStateSave(bh.gameBoard[i,j]);
+				}
+			}
+		}
+
+		public GameObject ToGameObject() {
+			//NOTE: THIS MUST BE LOADED AFTER THE PLAYER TEAM IS LOADED.
+			UnityEngine.Assertions.Assert.IsTrue (GameObject.FindGameObjectWithTag ("BoardHandler"));
+			GameObject oldBoardHandler = GameObject.FindGameObjectWithTag ("BoardHandler");
+			GameObject output = new GameObject ("BoardHandler");
+			output.tag = "BoardHandler";
+			output.AddComponent<ActionHandler> ();
+			output.AddComponent<EnemyAIHandler> ();
+			output.GetComponent<EnemyAIHandler> ().delayAfterActing = oldBoardHandler.GetComponent<EnemyAIHandler> ().delayAfterActing;	
+			output.AddComponent<MiscKeyHandler> ();
+			output.AddComponent<BoardHandler> ();
+			BoardHandler bh = output.GetComponent<BoardHandler> ();
+			bh._turnNumber = this._turnNumber;
+			bh.mapHeight = this.mapHeight;
+			bh.mapWidth = this.mapWidth;
+			bh.gameBoard = new tileState[mapWidth, mapHeight];
+			bh.suppressInitialization = true;
+			bh.needToRefreshPlayerTeam = false;
+
+			for (int i = 0; i < mapWidth; i++) {
+				for (int j = 0; j < mapHeight; j++) {
+					bh.gameBoard [i, j] = (this.gameBoard [i, j]).ToTileState (new Coords (i, j));
+				}
+			}
+			for (int i = 0; i < mapWidth; i++) {
+				for (int j = 0; j < mapHeight; j++) {
+					oldBoardHandler.GetComponent<BoardHandler> ().getTileState (new Coords (i, j)).destroyAllButPlayer ();
+				}
+			}
+			oldBoardHandler.tag = "Untagged";
+			GameObject.Destroy (oldBoardHandler);
+			return output;
+		}
+	}
 }

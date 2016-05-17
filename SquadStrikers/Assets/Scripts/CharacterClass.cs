@@ -9,6 +9,7 @@ using Ability = PCHandler.Ability;
 using System.Collections.Generic;
 using System.Linq;
 
+[System.Serializable]
 public class CharacterClass{
 
 	public int baseAttack;
@@ -29,6 +30,7 @@ public class CharacterClass{
 	public List<Ability> startingAbilities;
 	public int inventoryCapacity;
 
+	[System.Serializable]
 	public struct ClassAbilityTransitionPossibility {
 		public Ability initial;
 		public Ability final;
@@ -43,6 +45,7 @@ public class CharacterClass{
 		}
 	}
 
+	[System.Serializable]
 	public class ClassAbilityGrid {
 		List<ClassAbilityTransitionPossibility> transitionProbabilities;
 

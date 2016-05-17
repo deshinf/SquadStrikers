@@ -8,6 +8,7 @@ public class PlayerTeamScript : MonoBehaviour {
 	public GameObject[] defaultTeam = new GameObject[TEAM_SIZE];
 	[SerializeField] private PCHandler[] _team = new PCHandler[TEAM_SIZE];
 	[SerializeField] private int _score = 0;
+	public string saveName = "test";
 	public int score {
 		get { return _score; }
 		set {
@@ -83,5 +84,59 @@ public class PlayerTeamScript : MonoBehaviour {
 
 	// Update is called once per frame
 	void Update () {
+	}
+
+
+	//======================================================IO Here=============================================================//
+	[System.Serializable]
+	public class PlayerTeamScriptSave {
+		public int depth = 0;
+		public PCHandler.PCHandlerSave[] _team;
+		public int _score = 0;
+		public string saveName = "test";
+
+		public PlayerTeamScriptSave (PlayerTeamScript pts) {
+			this.depth = pts.depth;
+			this._team = new PCHandler.PCHandlerSave[TEAM_SIZE];
+			for (int i = 0; i<TEAM_SIZE; i++) {
+				this._team[i] = new PCHandler.PCHandlerSave(pts._team[i]);
+			}
+			this._score = pts._score;
+			this.saveName = pts.saveName;
+		}
+
+		public GameObject ToGameObject() {
+			UnityEngine.Assertions.Assert.IsTrue (GameObject.FindGameObjectWithTag ("PlayerTeam"));
+			GameObject oldPlayerTeam = GameObject.FindGameObjectWithTag ("PlayerTeam");
+			GameObject output = new GameObject ("PlayerTeam");
+			output.AddComponent<Database> ();
+			output.GetComponent<Database>().items = oldPlayerTeam.GetComponent<Database>().items;
+			output.GetComponent<Database>().enemies = oldPlayerTeam.GetComponent<Database>().enemies;
+			output.GetComponent<Database>().tiles = oldPlayerTeam.GetComponent<Database>().tiles;
+			output.tag = "PlayerTeam";
+			output.AddComponent<PlayerTeamScript>();
+			PlayerTeamScript pts = output.GetComponent<PlayerTeamScript>();
+			pts.defaultTeam = oldPlayerTeam.GetComponent<PlayerTeamScript>().defaultTeam;
+
+			pts.depth = this.depth;
+			pts._score = this._score;
+			pts.saveName = this.saveName;
+			pts._team = new PCHandler[TEAM_SIZE];
+			for (int i = 0; i<TEAM_SIZE; i++) {
+				pts._team[i] = this._team[i].ToGameObject().GetComponent<PCHandler>();
+				pts._team [i].fatiguedSprite = oldPlayerTeam.GetComponent<PlayerTeamScript> ()._team [i].fatiguedSprite;
+				pts._team [i].baseSprite = oldPlayerTeam.GetComponent<PlayerTeamScript> ()._team [i].baseSprite;
+				pts._team [i].gameObject.GetComponent<SpriteRenderer> ().sprite = oldPlayerTeam.GetComponent<PlayerTeamScript> ()._team [i].baseSprite;
+				pts._team [i].gameObject.transform.parent = pts.gameObject.transform;
+			}
+			oldPlayerTeam.tag = "Untagged";
+			for (int i = 0; i < TEAM_SIZE; i++) {
+				foreach (Item item in oldPlayerTeam.GetComponent<PlayerTeamScript>().getTeamMember(i).inventory) {
+					Destroy(item.gameObject);
+				}
+			}
+			GameObject.Destroy (oldPlayerTeam);
+			return output;
+		}
 	}
 }

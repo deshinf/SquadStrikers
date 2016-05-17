@@ -7,7 +7,9 @@ public class MiscKeyHandler : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		pauseMenu = GameObject.FindGameObjectWithTag ("PauseMenu");
-		pauseMenu.SetActive (false);
+		if (pauseMenu) {
+			pauseMenu.SetActive (false);
+		}
 	}
 	
 	// Update is called once per frame
