@@ -93,13 +93,13 @@ public class BoardHandler : MonoBehaviour {
 					if (_currentGameState == GameStates.MovementMode) {
 						Assert.IsTrue (is_selected);
 						Untarget ();
-						GameObject.FindGameObjectWithTag ("ActionBar").GetComponent<ActionBar> ().Fill ();
 						_currentGameState = value;
+						GameObject.FindGameObjectWithTag ("ActionBar").GetComponent<ActionBar> ().Fill ();
 					} else if (_currentGameState == GameStates.TargetMode) {
 						Assert.IsTrue (is_selected);
 						Untarget ();
-						GameObject.FindGameObjectWithTag ("ActionBar").GetComponent<ActionBar> ().Fill ();
 						_currentGameState = value;
+						GameObject.FindGameObjectWithTag ("ActionBar").GetComponent<ActionBar> ().Fill ();
 					} else {
 						throw new System.Exception ("Invalid State Transition: " + _currentGameState.ToString () + " to " + value.ToString ());
 					}
@@ -315,6 +315,7 @@ public class BoardHandler : MonoBehaviour {
 	public void Untarget () {
 		foreach (tileState tState in gameBoard) {
 			tState.tile.isHighlighted = false;
+			tState.tile.targeting = Targeting.NoTargeting;
 			if (tState.unit) {
 				tState.unit.targeting = Targeting.NoTargeting;
 			}
@@ -665,155 +666,155 @@ public class BoardHandler : MonoBehaviour {
 		if (gameState == GameStates.MovementMode) {
 			gameState = GameStates.EnemyTurn;
 		} else if (gameState == GameStates.TargetMode) {
-			gameObject.GetComponent<ActionHandler> ().PerformAction (new PCHandler.Action("Cancel","",null as Item));
-			gameObject.GetComponent<ActionHandler> ().PerformAction (new PCHandler.Action("Do Nothing","",null as Item));
+			gameObject.GetComponent<ActionHandler> ().PerformAction (new PCHandler.Action("Cancel","",null as Item),null);
+			gameObject.GetComponent<ActionHandler> ().PerformAction (new PCHandler.Action("Do Nothing","",null as Item), null);
 			gameState = GameStates.EnemyTurn;
 		} else if (gameState == GameStates.ActionMode) {
-			gameObject.GetComponent<ActionHandler> ().PerformAction (new PCHandler.Action("Do Nothing","",null as Item));
+			gameObject.GetComponent<ActionHandler> ().PerformAction (new PCHandler.Action("Do Nothing","",null as Item), null);
 			gameState = GameStates.EnemyTurn;
 		}
 	}
 
-	//Returns false if no targets found, otherwise true.
-	public bool SwordTargeting () {
-		gameState = GameStates.TargetMode;
-		bool output = false;
-		Coords[] targetableSquares;
-		if (selectedUnit ().hasAbility (PCHandler.Ability.SwordMastery)) {
-			targetableSquares = new Coords[] {
-				selected + Coords.UP,
-				selected + Coords.DOWN,
-				selected + Coords.RIGHT,
-				selected + Coords.LEFT,
-				selected + Coords.UP + Coords.RIGHT,
-				selected + Coords.UP + Coords.LEFT,
-				selected + Coords.DOWN + Coords.RIGHT,
-				selected + Coords.DOWN + Coords.LEFT,
-			};
-		} else {
-			targetableSquares = new Coords[] {
-				selected + Coords.UP,
-				selected + Coords.DOWN,
-				selected + Coords.RIGHT,
-				selected + Coords.LEFT
-			};
-		}
-		foreach (Coords c in targetableSquares) {
-			if (c.x > -1 && c.y > -1 && c.x < mapWidth && c.y < mapHeight) {
-				if (getTileState (c).unit) {
-					if (getTileState (c).unit is Enemy) {
-						getTileState (c).unit.GetComponent<Enemy> ().targeting = Targeting.HostileTargeting;
-						output = true;
-					}
-				}
-			}
-		}
-		return output;
-	}
-
-
-	//Returns false if no targets found, otherwise true.
-	public bool MaceTargeting () {
-		bool output = false;
-		gameState = GameStates.TargetMode;
-		Coords[] targetableSquares = new Coords[] {
-				selected + Coords.UP,
-				selected + Coords.DOWN,
-				selected + Coords.RIGHT,
-				selected + Coords.LEFT
-			};
-		foreach (Coords c in targetableSquares) {
-			if (c.x > -1 && c.y > -1 && c.x < mapWidth && c.y < mapHeight) {
-				if (getTileState (c).unit) {
-					if (getTileState (c).unit is Enemy) {
-						getTileState (c).unit.GetComponent<Enemy> ().targeting = Targeting.HostileTargeting;
-						output = true;
-					}
-				}
-			}
-		}
-		return output;
-	}
-
-	//Returns false if no targets found, otherwise true.
-	public bool BoardTargeting () {
-		gameState = GameStates.TargetMode;
-		bool output = false;
-		Coords[] targetableSquares = new Coords[] {
-			selected + Coords.UP,
-			selected + Coords.DOWN,
-			selected + Coords.RIGHT,
-			selected + Coords.LEFT
-		};
-		foreach (Coords c in targetableSquares) {
-			if (c.x > -1 && c.y > -1 && c.x < mapWidth && c.y < mapHeight) {
-				if (getTileState (c).unit) {
-					if (getTileState (c).unit is Enemy) {
-						getTileState (c).unit.GetComponent<Enemy> ().targeting = Targeting.HostileTargeting;
-						output = true;
-					}
-				}
-			}
-		}
-		return output;
-	}
-
-	public bool BowTargeting () {
-		gameState = GameStates.TargetMode;
-		bool output = false;
-		Tuple<Coords,List<Coords>>[] targetableSquaresAndBlockers = new Tuple<Coords,List<Coords>>[] {
-			new Tuple<Coords, List<Coords>>(selected + Coords.UP + Coords.UP,new List<Coords>{selected + Coords.UP}),
-			new Tuple<Coords, List<Coords>>(selected + Coords.UP + Coords.UP + Coords.UP,new List<Coords>{selected + Coords.UP, selected + Coords.UP + Coords.UP}),
-
-			new Tuple<Coords, List<Coords>>(selected + Coords.DOWN + Coords.DOWN,new List<Coords>{selected + Coords.DOWN}),
-			new Tuple<Coords, List<Coords>>(selected + Coords.DOWN + Coords.DOWN + Coords.DOWN,new List<Coords>{selected + Coords.DOWN, selected + Coords.DOWN + Coords.DOWN}),
-
-			new Tuple<Coords, List<Coords>>(selected + Coords.LEFT + Coords.LEFT,new List<Coords>{selected + Coords.LEFT}),
-			new Tuple<Coords, List<Coords>>(selected + Coords.LEFT + Coords.LEFT + Coords.LEFT,new List<Coords>{selected + Coords.LEFT, selected + Coords.LEFT + Coords.LEFT}),
-
-			new Tuple<Coords, List<Coords>>(selected + Coords.RIGHT + Coords.RIGHT,new List<Coords>{selected + Coords.RIGHT}),
-			new Tuple<Coords, List<Coords>>(selected + Coords.RIGHT + Coords.RIGHT + Coords.RIGHT,new List<Coords>{selected + Coords.RIGHT, selected + Coords.RIGHT + Coords.RIGHT}),
-
-			new Tuple<Coords, List<Coords>>(selected + Coords.UP + Coords.RIGHT,new List<Coords>{selected + Coords.UP, selected + Coords.RIGHT}),
-			new Tuple<Coords, List<Coords>>(selected + Coords.UP + Coords.LEFT,new List<Coords>{selected + Coords.UP, selected + Coords.LEFT}),
-			new Tuple<Coords, List<Coords>>(selected + Coords.DOWN + Coords.RIGHT,new List<Coords>{selected + Coords.DOWN, selected + Coords.RIGHT}),
-			new Tuple<Coords, List<Coords>>(selected + Coords.DOWN + Coords.LEFT,new List<Coords>{selected + Coords.DOWN, selected + Coords.LEFT}),
-
-			new Tuple<Coords, List<Coords>>(selected + Coords.UP + Coords.UP + Coords.RIGHT,new List<Coords>{selected + Coords.UP, selected + Coords.UP + Coords.RIGHT}),
-			new Tuple<Coords, List<Coords>>(selected + Coords.UP + Coords.RIGHT + Coords.RIGHT,new List<Coords>{selected + Coords.RIGHT, selected + Coords.UP +Coords.RIGHT}),
-
-
-			new Tuple<Coords, List<Coords>>(selected + Coords.UP + Coords.UP + Coords.LEFT,new List<Coords>{selected + Coords.UP, selected + Coords.UP + Coords.LEFT}),
-			new Tuple<Coords, List<Coords>>(selected + Coords.UP + Coords.LEFT + Coords.LEFT,new List<Coords>{selected + Coords.LEFT, selected + Coords.UP +Coords.LEFT}),
-
-
-			new Tuple<Coords, List<Coords>>(selected + Coords.DOWN + Coords.DOWN + Coords.LEFT,new List<Coords>{selected + Coords.DOWN, selected + Coords.DOWN + Coords.LEFT}),
-			new Tuple<Coords, List<Coords>>(selected + Coords.DOWN + Coords.LEFT + Coords.LEFT,new List<Coords>{selected + Coords.LEFT, selected + Coords.DOWN +Coords.LEFT}),
-
-
-			new Tuple<Coords, List<Coords>>(selected + Coords.DOWN + Coords.DOWN + Coords.RIGHT,new List<Coords>{selected + Coords.DOWN, selected + Coords.DOWN + Coords.RIGHT}),
-			new Tuple<Coords, List<Coords>>(selected + Coords.DOWN + Coords.RIGHT + Coords.RIGHT,new List<Coords>{selected + Coords.RIGHT, selected + Coords.DOWN +Coords.RIGHT}),
-
-			};
-		foreach (Tuple<Coords,List<Coords>> t in targetableSquaresAndBlockers) {
-			Coords c = t.Item1;
-			if (c.x > -1 && c.y > -1 && c.x < mapWidth && c.y < mapHeight) {
-				if (getTileState (c).unit) {
-					if (getTileState (c).unit is Enemy) {
-						bool canAttack = true;
-						foreach (Coords blocker in t.Item2) {
-							if (getTileState (blocker).unit || getTileState (blocker).tile.blocksLineOfFire) canAttack = false;
-						}
-						if (canAttack) {
-							getTileState (c).unit.GetComponent<Enemy> ().targeting = Targeting.HostileTargeting;
-							output = true;
-						}
-					}
-				}
-			}
-		}
-		return output;
-	}
+//	//Returns false if no targets found, otherwise true.
+//	public bool SwordTargeting () {
+//		gameState = GameStates.TargetMode;
+//		bool output = false;
+//		Coords[] targetableSquares;
+//		if (selectedUnit ().hasAbility (PCHandler.Ability.SwordMastery)) {
+//			targetableSquares = new Coords[] {
+//				selected + Coords.UP,
+//				selected + Coords.DOWN,
+//				selected + Coords.RIGHT,
+//				selected + Coords.LEFT,
+//				selected + Coords.UP + Coords.RIGHT,
+//				selected + Coords.UP + Coords.LEFT,
+//				selected + Coords.DOWN + Coords.RIGHT,
+//				selected + Coords.DOWN + Coords.LEFT,
+//			};
+//		} else {
+//			targetableSquares = new Coords[] {
+//				selected + Coords.UP,
+//				selected + Coords.DOWN,
+//				selected + Coords.RIGHT,
+//				selected + Coords.LEFT
+//			};
+//		}
+//		foreach (Coords c in targetableSquares) {
+//			if (c.x > -1 && c.y > -1 && c.x < mapWidth && c.y < mapHeight) {
+//				if (getTileState (c).unit) {
+//					if (getTileState (c).unit is Enemy) {
+//						getTileState (c).unit.GetComponent<Enemy> ().targeting = Targeting.HostileTargeting;
+//						output = true;
+//					}
+//				}
+//			}
+//		}
+//		return output;
+//	}
+//
+//
+//	//Returns false if no targets found, otherwise true.
+//	public bool MaceTargeting () {
+//		bool output = false;
+//		gameState = GameStates.TargetMode;
+//		Coords[] targetableSquares = new Coords[] {
+//				selected + Coords.UP,
+//				selected + Coords.DOWN,
+//				selected + Coords.RIGHT,
+//				selected + Coords.LEFT
+//			};
+//		foreach (Coords c in targetableSquares) {
+//			if (c.x > -1 && c.y > -1 && c.x < mapWidth && c.y < mapHeight) {
+//				if (getTileState (c).unit) {
+//					if (getTileState (c).unit is Enemy) {
+//						getTileState (c).unit.GetComponent<Enemy> ().targeting = Targeting.HostileTargeting;
+//						output = true;
+//					}
+//				}
+//			}
+//		}
+//		return output;
+//	}
+//
+//	//Returns false if no targets found, otherwise true.
+//	public bool BoardTargeting () {
+//		gameState = GameStates.TargetMode;
+//		bool output = false;
+//		Coords[] targetableSquares = new Coords[] {
+//			selected + Coords.UP,
+//			selected + Coords.DOWN,
+//			selected + Coords.RIGHT,
+//			selected + Coords.LEFT
+//		};
+//		foreach (Coords c in targetableSquares) {
+//			if (c.x > -1 && c.y > -1 && c.x < mapWidth && c.y < mapHeight) {
+//				if (getTileState (c).unit) {
+//					if (getTileState (c).unit is Enemy) {
+//						getTileState (c).unit.GetComponent<Enemy> ().targeting = Targeting.HostileTargeting;
+//						output = true;
+//					}
+//				}
+//			}
+//		}
+//		return output;
+//	}
+//
+//	public bool BowTargeting () {
+//		gameState = GameStates.TargetMode;
+//		bool output = false;
+//		Tuple<Coords,List<Coords>>[] targetableSquaresAndBlockers = new Tuple<Coords,List<Coords>>[] {
+//			new Tuple<Coords, List<Coords>>(selected + Coords.UP + Coords.UP,new List<Coords>{selected + Coords.UP}),
+//			new Tuple<Coords, List<Coords>>(selected + Coords.UP + Coords.UP + Coords.UP,new List<Coords>{selected + Coords.UP, selected + Coords.UP + Coords.UP}),
+//
+//			new Tuple<Coords, List<Coords>>(selected + Coords.DOWN + Coords.DOWN,new List<Coords>{selected + Coords.DOWN}),
+//			new Tuple<Coords, List<Coords>>(selected + Coords.DOWN + Coords.DOWN + Coords.DOWN,new List<Coords>{selected + Coords.DOWN, selected + Coords.DOWN + Coords.DOWN}),
+//
+//			new Tuple<Coords, List<Coords>>(selected + Coords.LEFT + Coords.LEFT,new List<Coords>{selected + Coords.LEFT}),
+//			new Tuple<Coords, List<Coords>>(selected + Coords.LEFT + Coords.LEFT + Coords.LEFT,new List<Coords>{selected + Coords.LEFT, selected + Coords.LEFT + Coords.LEFT}),
+//
+//			new Tuple<Coords, List<Coords>>(selected + Coords.RIGHT + Coords.RIGHT,new List<Coords>{selected + Coords.RIGHT}),
+//			new Tuple<Coords, List<Coords>>(selected + Coords.RIGHT + Coords.RIGHT + Coords.RIGHT,new List<Coords>{selected + Coords.RIGHT, selected + Coords.RIGHT + Coords.RIGHT}),
+//
+//			new Tuple<Coords, List<Coords>>(selected + Coords.UP + Coords.RIGHT,new List<Coords>{selected + Coords.UP, selected + Coords.RIGHT}),
+//			new Tuple<Coords, List<Coords>>(selected + Coords.UP + Coords.LEFT,new List<Coords>{selected + Coords.UP, selected + Coords.LEFT}),
+//			new Tuple<Coords, List<Coords>>(selected + Coords.DOWN + Coords.RIGHT,new List<Coords>{selected + Coords.DOWN, selected + Coords.RIGHT}),
+//			new Tuple<Coords, List<Coords>>(selected + Coords.DOWN + Coords.LEFT,new List<Coords>{selected + Coords.DOWN, selected + Coords.LEFT}),
+//
+//			new Tuple<Coords, List<Coords>>(selected + Coords.UP + Coords.UP + Coords.RIGHT,new List<Coords>{selected + Coords.UP, selected + Coords.UP + Coords.RIGHT}),
+//			new Tuple<Coords, List<Coords>>(selected + Coords.UP + Coords.RIGHT + Coords.RIGHT,new List<Coords>{selected + Coords.RIGHT, selected + Coords.UP +Coords.RIGHT}),
+//
+//
+//			new Tuple<Coords, List<Coords>>(selected + Coords.UP + Coords.UP + Coords.LEFT,new List<Coords>{selected + Coords.UP, selected + Coords.UP + Coords.LEFT}),
+//			new Tuple<Coords, List<Coords>>(selected + Coords.UP + Coords.LEFT + Coords.LEFT,new List<Coords>{selected + Coords.LEFT, selected + Coords.UP +Coords.LEFT}),
+//
+//
+//			new Tuple<Coords, List<Coords>>(selected + Coords.DOWN + Coords.DOWN + Coords.LEFT,new List<Coords>{selected + Coords.DOWN, selected + Coords.DOWN + Coords.LEFT}),
+//			new Tuple<Coords, List<Coords>>(selected + Coords.DOWN + Coords.LEFT + Coords.LEFT,new List<Coords>{selected + Coords.LEFT, selected + Coords.DOWN +Coords.LEFT}),
+//
+//
+//			new Tuple<Coords, List<Coords>>(selected + Coords.DOWN + Coords.DOWN + Coords.RIGHT,new List<Coords>{selected + Coords.DOWN, selected + Coords.DOWN + Coords.RIGHT}),
+//			new Tuple<Coords, List<Coords>>(selected + Coords.DOWN + Coords.RIGHT + Coords.RIGHT,new List<Coords>{selected + Coords.RIGHT, selected + Coords.DOWN +Coords.RIGHT}),
+//
+//			};
+//		foreach (Tuple<Coords,List<Coords>> t in targetableSquaresAndBlockers) {
+//			Coords c = t.Item1;
+//			if (c.x > -1 && c.y > -1 && c.x < mapWidth && c.y < mapHeight) {
+//				if (getTileState (c).unit) {
+//					if (getTileState (c).unit is Enemy) {
+//						bool canAttack = true;
+//						foreach (Coords blocker in t.Item2) {
+//							if (getTileState (blocker).unit || getTileState (blocker).tile.blocksLineOfFire) canAttack = false;
+//						}
+//						if (canAttack) {
+//							getTileState (c).unit.GetComponent<Enemy> ().targeting = Targeting.HostileTargeting;
+//							output = true;
+//						}
+//					}
+//				}
+//			}
+//		}
+//		return output;
+//	}
 
 	public bool isImpassibleOrOutOfBounds (Coords c) {
 		return (!inBounds (c) || !getTileState (c).tile.isPassable);
@@ -897,53 +898,53 @@ public class BoardHandler : MonoBehaviour {
 		return false;
 	}
 
-	//Returns false if no targets found, otherwise true.
-	public bool SpearTargeting () {
-		gameState = GameStates.TargetMode;
-		bool output = false;
-		foreach (Coords direction in new Coords[] {Coords.DOWN, Coords.LEFT, Coords.RIGHT, Coords.UP}) {
-			Coords c = selected + direction;
-			if (inBounds (c) && getTileState(c).tile.isPassable) {
-				if (getTileState (c).unit) {
-					if (getTileState (c).unit is Enemy) {
-						getTileState (c).unit.GetComponent<Enemy> ().targeting = Targeting.HostileTargeting;
-						output = true;
-					}
-				}
-				if ((selectedUnit().hasAbility(PCHandler.Ability.SpearMastery) || !getTileState(c).unit) && inBounds (c + direction) && !getTileState (c).tile.blocksLineOfFire) {
-					c = selected + direction + direction;
-					if (getTileState (c).unit) {
-						if (getTileState (c).unit is Enemy) {
-							getTileState (c).unit.GetComponent<Enemy> ().targeting = Targeting.HostileTargeting;
-							output = true;
-						}
-					}
-				}
-			}
-		}
-		return output;
-	}
-
-	//Returns false if no targets found, otherwise true.
-	public bool CardinalAttackTargeting (int range, bool ignoresUnitBlcoking) {
-		gameState = GameStates.TargetMode;
-		bool output = false;
-		Coords currentTarget;
-		foreach (Coords direction in new Coords[] {Coords.DOWN, Coords.LEFT, Coords.RIGHT, Coords.UP}) {
-			currentTarget = selected;
-			for (int i = 1; i <= range; i++) {
-				currentTarget = currentTarget + direction;
-				if (inBounds (currentTarget) && getTileState (currentTarget).unit && getTileState (currentTarget).unit is Enemy) {
-					getTileState (currentTarget).unit.GetComponent<Enemy> ().targeting = Targeting.HostileTargeting;
-					output = true;
-					break;
-				} else if (!(inBounds (currentTarget) && !getTileState (currentTarget).tile.blocksLineOfFire && (!getTileState (currentTarget).unit || ignoresUnitBlcoking))) {
-					break;
-				}
-			}
-		}
-		return output;
-	}
+//	//Returns false if no targets found, otherwise true.
+//	public bool SpearTargeting () {
+//		gameState = GameStates.TargetMode;
+//		bool output = false;
+//		foreach (Coords direction in new Coords[] {Coords.DOWN, Coords.LEFT, Coords.RIGHT, Coords.UP}) {
+//			Coords c = selected + direction;
+//			if (inBounds (c) && getTileState(c).tile.isPassable) {
+//				if (getTileState (c).unit) {
+//					if (getTileState (c).unit is Enemy) {
+//						getTileState (c).unit.GetComponent<Enemy> ().targeting = Targeting.HostileTargeting;
+//						output = true;
+//					}
+//				}
+//				if ((selectedUnit().hasAbility(PCHandler.Ability.SpearMastery) || !getTileState(c).unit) && inBounds (c + direction) && !getTileState (c).tile.blocksLineOfFire) {
+//					c = selected + direction + direction;
+//					if (getTileState (c).unit) {
+//						if (getTileState (c).unit is Enemy) {
+//							getTileState (c).unit.GetComponent<Enemy> ().targeting = Targeting.HostileTargeting;
+//							output = true;
+//						}
+//					}
+//				}
+//			}
+//		}
+//		return output;
+//	}
+//
+//	//Returns false if no targets found, otherwise true.
+//	public bool CardinalAttackTargeting (int range, bool ignoresUnitBlcoking) {
+//		gameState = GameStates.TargetMode;
+//		bool output = false;
+//		Coords currentTarget;
+//		foreach (Coords direction in new Coords[] {Coords.DOWN, Coords.LEFT, Coords.RIGHT, Coords.UP}) {
+//			currentTarget = selected;
+//			for (int i = 1; i <= range; i++) {
+//				currentTarget = currentTarget + direction;
+//				if (inBounds (currentTarget) && getTileState (currentTarget).unit && getTileState (currentTarget).unit is Enemy) {
+//					getTileState (currentTarget).unit.GetComponent<Enemy> ().targeting = Targeting.HostileTargeting;
+//					output = true;
+//					break;
+//				} else if (!(inBounds (currentTarget) && !getTileState (currentTarget).tile.blocksLineOfFire && (!getTileState (currentTarget).unit || ignoresUnitBlcoking))) {
+//					break;
+//				}
+//			}
+//		}
+//		return output;
+//	}
 
 	//Returns false if no targets found, otherwise true.
 	public bool canAttackPlayerWithCardinalAttack (out PCHandler target, Coords amHere, int range, bool ignoresUnitBlcoking) {
@@ -964,51 +965,51 @@ public class BoardHandler : MonoBehaviour {
 		return false;
 	}
 
-	//Returns false if no targets found, otherwise true.
-	public bool NonpenetratingCardinalBuffTargeting (int range) {
-		gameState = GameStates.TargetMode;
-		bool output = false;
-		Coords currentTarget;
-		foreach (Coords direction in new Coords[] {Coords.DOWN, Coords.LEFT, Coords.RIGHT, Coords.UP}) {
-			currentTarget = selected;
-			for (int i = 1; i <= range; i++) {
-				currentTarget = currentTarget + direction;
-				if (inBounds (currentTarget) && getTileState (currentTarget).unit && getTileState (currentTarget).unit.isFriendly) {
-					getTileState (currentTarget).unit.GetComponent<Unit> ().targeting = Targeting.FriendlyTargeting;
-					output = true;
-					break;
-				} else if (!(inBounds (currentTarget) && !getTileState (currentTarget).tile.blocksLineOfFire && !getTileState (currentTarget).unit)) {
-					break;
-				}
-			}
-		}
-		return output;
-	}
-
-	//Returns false if no targets found, otherwise true.
-	public bool NonpenetratingCardinalMixedTargeting (int range) {
-		gameState = GameStates.TargetMode;
-		bool output = false;
-		Coords currentTarget;
-		foreach (Coords direction in new Coords[] {Coords.DOWN, Coords.LEFT, Coords.RIGHT, Coords.UP}) {
-			currentTarget = selected;
-			for (int i = 1; i <= range; i++) {
-				currentTarget = currentTarget + direction;
-				if (inBounds (currentTarget) && getTileState (currentTarget).unit) {
-					if (getTileState (currentTarget).unit.isFriendly) {
-						getTileState (currentTarget).unit.GetComponent<Unit> ().targeting = Targeting.FriendlyTargeting;
-					} else {
-						getTileState (currentTarget).unit.GetComponent<Unit> ().targeting = Targeting.HostileTargeting;
-					}
-					output = true;
-					break;
-				} else if (!(inBounds (currentTarget) && !getTileState (currentTarget).tile.blocksLineOfFire && !getTileState (currentTarget).unit)) {
-					break;
-				}
-			}
-		}
-		return output;
-	}
+//	//Returns false if no targets found, otherwise true.
+//	public bool NonpenetratingCardinalBuffTargeting (int range) {
+//		gameState = GameStates.TargetMode;
+//		bool output = false;
+//		Coords currentTarget;
+//		foreach (Coords direction in new Coords[] {Coords.DOWN, Coords.LEFT, Coords.RIGHT, Coords.UP}) {
+//			currentTarget = selected;
+//			for (int i = 1; i <= range; i++) {
+//				currentTarget = currentTarget + direction;
+//				if (inBounds (currentTarget) && getTileState (currentTarget).unit && getTileState (currentTarget).unit.isFriendly) {
+//					getTileState (currentTarget).unit.GetComponent<Unit> ().targeting = Targeting.FriendlyTargeting;
+//					output = true;
+//					break;
+//				} else if (!(inBounds (currentTarget) && !getTileState (currentTarget).tile.blocksLineOfFire && !getTileState (currentTarget).unit)) {
+//					break;
+//				}
+//			}
+//		}
+//		return output;
+//	}
+//
+//	//Returns false if no targets found, otherwise true.
+//	public bool NonpenetratingCardinalMixedTargeting (int range) {
+//		gameState = GameStates.TargetMode;
+//		bool output = false;
+//		Coords currentTarget;
+//		foreach (Coords direction in new Coords[] {Coords.DOWN, Coords.LEFT, Coords.RIGHT, Coords.UP}) {
+//			currentTarget = selected;
+//			for (int i = 1; i <= range; i++) {
+//				currentTarget = currentTarget + direction;
+//				if (inBounds (currentTarget) && getTileState (currentTarget).unit) {
+//					if (getTileState (currentTarget).unit.isFriendly) {
+//						getTileState (currentTarget).unit.GetComponent<Unit> ().targeting = Targeting.FriendlyTargeting;
+//					} else {
+//						getTileState (currentTarget).unit.GetComponent<Unit> ().targeting = Targeting.HostileTargeting;
+//					}
+//					output = true;
+//					break;
+//				} else if (!(inBounds (currentTarget) && !getTileState (currentTarget).tile.blocksLineOfFire && !getTileState (currentTarget).unit)) {
+//					break;
+//				}
+//			}
+//		}
+//		return output;
+//	}
 
 	//Determines whether an enemy unit at amHere with movementSpeed move could reach a square beside a player.
 	//If so, gives one such square in moveTo and a corresponding player in target.
@@ -1471,6 +1472,159 @@ public class BoardHandler : MonoBehaviour {
 		return false;
 	}
 
+	//Highlights all targetable squares according to input parameters.
+	//valid points are within range squares of startPoint, in cardinal directions if cardinal = true.
+	//They are highlighted in the highlighting given by type and tiles that would be highlightable if an appropriate thing were on them are highlighted as per invalidType.
+	//Returns null if no targets are found. Otherwise returns a default target.
+	//If allowsDiagonals is on, diagonals count as 1 range. Otherwise, they count as 2. This has no effect in Cardinal Targeting.
+	//Note: Minimum range doesn't affect self-targeting. To do that, set targetSelf to false.
+	public GameObject Target(int range, bool cardinal, bool includeSelf, bool includeFriendlies, bool includeHostiles, bool includeFloors, bool includeWalls, bool penetratingUnits, bool penetratingWalls, Targeting type, Targeting invalidType, bool allowsDiagonals, int minimumRange = 0) {
+		return Target(range, cardinal, includeSelf, includeFriendlies, includeHostiles, includeFloors, includeWalls, penetratingUnits, penetratingWalls, type, invalidType, allowsDiagonals, selected, minimumRange);
+	}
+
+	public GameObject Target(int range, bool cardinal, bool includeSelf, bool includeFriendlies, bool includeHostiles, bool includeFloors, bool includeWalls, bool penetratingUnits, bool penetratingWalls, Targeting type, Targeting invalidType, bool allowsDiagonals, Coords startPoint, int minimumRange = 0) {
+		Untarget ();
+		if (cardinal) {
+			return CardinalTarget (range, includeSelf, includeFriendlies, includeHostiles, includeFloors, includeWalls, penetratingUnits, penetratingWalls, type, invalidType, startPoint, minimumRange);
+		} else {
+			return NonCardinalTarget (range, includeSelf, includeFriendlies, includeHostiles, includeFloors, includeWalls, penetratingUnits, penetratingWalls, type, invalidType, allowsDiagonals, startPoint, minimumRange);
+		}
+	}
+
+	private GameObject CardinalTarget (int range, bool includeSelf, bool includeFriendlies, bool includeHostiles, bool includeFloors, bool includeWalls, bool penetratingUnits, bool penetratingWalls, Targeting type, Targeting invalidType, Coords startPoint, int minimumRange) {
+		//gameState = GameStates.TargetMode;
+		GameObject defaultTarget = null;
+		Coords currentTarget;
+		if (includeSelf) {
+			if (getTileState (startPoint).unit) {
+				getTileState (startPoint).unit.targeting = type;
+				defaultTarget = getTileState (currentTarget).unit.gameObject;
+
+			} else {
+				getTileState (startPoint).tile.targeting = type;
+				defaultTarget = getTileState (currentTarget).tile.gameObject;
+			}
+		}
+		foreach (Coords direction in new Coords[] {Coords.DOWN, Coords.LEFT, Coords.RIGHT, Coords.UP}) {
+			currentTarget = startPoint;
+			for (int i = 1; i <= range; i++) {
+				currentTarget = currentTarget + direction;
+				if (i >= minimumRange) {
+					if (inBounds (currentTarget) && getTileState (currentTarget).unit) {
+						if ((includeHostiles && !getTileState (currentTarget).unit.isFriendly) || (includeFriendlies && getTileState (currentTarget).unit.isFriendly)) {
+							getTileState (currentTarget).unit.GetComponent<Unit> ().targeting = type;
+							if (defaultTarget == null) {
+								defaultTarget = getTileState (currentTarget).unit.gameObject;
+							}
+						} else {
+							getTileState (currentTarget).unit.GetComponent<Unit> ().targeting = invalidType;
+						}
+					} else if (inBounds (currentTarget) && ((includeFloors && !getTileState (currentTarget).tile.blocksLineOfFire) || (includeWalls && !getTileState (currentTarget).tile.blocksLineOfFire))) {
+						getTileState (currentTarget).tile.GetComponent<Tile> ().targeting = type;
+						if (defaultTarget == null) {
+							defaultTarget = getTileState (currentTarget).tile.gameObject;
+						}
+					} else if (inBounds (currentTarget)) {
+						getTileState (currentTarget).tile.GetComponent<Tile> ().targeting = invalidType;
+					}
+					if (!inBounds (currentTarget) || (getTileState (currentTarget).unit && !penetratingUnits) || (getTileState (currentTarget).tile.blocksLineOfFire && !penetratingWalls)) {
+						break;
+					}
+				} else if (!inBounds (currentTarget) || (getTileState (currentTarget).unit && !penetratingUnits) || (getTileState (currentTarget).tile.blocksLineOfFire && !penetratingWalls)) {
+					break;
+				}
+			}
+		}
+		return defaultTarget;
+	}
+
+	private GameObject NonCardinalTarget (int range, bool includeSelf, bool includeFriendlies, bool includeHostiles, bool includeFloors, bool includeWalls, bool penetratingUnits, bool penetratingWalls, Targeting type, Targeting invalidType, bool allowsDiagonals, Coords startPoint, int minimumRange) {
+		//gameState = GameStates.TargetMode;
+		GameObject defaultTarget = null;
+		Coords currentTarget;
+		if (includeSelf) {
+			if (getTileState (startPoint).unit) {
+				getTileState (startPoint).unit.targeting = type;
+				defaultTarget = getTileState (startPoint).unit.gameObject;
+
+			} else {
+				getTileState (startPoint).tile.targeting = type;
+				defaultTarget = getTileState (startPoint).tile.gameObject;
+			}
+		}
+		int crossRange;
+		for (int i = -range; i <= range; i++) {
+			Debug.Log ("i = " + i);
+			crossRange = allowsDiagonals ? range : range - Math.Abs (i);
+			for (int j = -crossRange; j <= crossRange; j++) {
+				if (i != 0 || j != 0) {
+					if (i + j >= minimumRange) {
+						bool unblocked = true;
+						foreach (Coords blocking in interveningSquares(new Coords(i,j))) {
+							if (!inBounds (blocking + startPoint) || (getTileState (blocking + startPoint).unit && !penetratingUnits) || (getTileState (blocking + startPoint).tile.blocksLineOfFire && !penetratingWalls)) {
+								unblocked = false;
+								break;
+							}
+						}
+						if (unblocked) {
+							currentTarget = new Coords (i, j) + startPoint;
+							if (inBounds (currentTarget) && getTileState (currentTarget).unit) {
+								if ((includeHostiles && !getTileState (currentTarget).unit.isFriendly) || (includeFriendlies && getTileState (currentTarget).unit.isFriendly)) {
+									getTileState (currentTarget).unit.GetComponent<Unit> ().targeting = type;
+									if (defaultTarget == null) {
+										defaultTarget = getTileState (currentTarget).unit.gameObject;
+									}
+								} else {
+									getTileState (currentTarget).unit.GetComponent<Unit> ().targeting = invalidType;
+								}
+							} else if (inBounds (currentTarget) && ((includeFloors && !getTileState (currentTarget).tile.blocksLineOfFire) || (includeWalls && !getTileState (currentTarget).tile.blocksLineOfFire))) {
+								getTileState (currentTarget).tile.GetComponent<Tile> ().targeting = type;
+								if (defaultTarget == null) {
+									defaultTarget = getTileState (currentTarget).tile.gameObject;
+								}			
+							} else if (inBounds (currentTarget)) {
+								getTileState (currentTarget).tile.GetComponent<Tile> ().targeting = invalidType;
+							}
+						}
+					}
+				}
+			}
+		}
+		return defaultTarget;
+	}
+
+	//When given a relative vector, this function returns a list of all squares that get in the way (in the same relative coordinate system). It the test of whether a line between the centers of the locations would intersect each square at any point.
+	public List<Coords> interveningSquares (Coords c) {
+		int reversedX = 1; //-1 if reversed. 1 otherwise.
+		int reversedY = 1;
+		List<Coords> flippedOutput = new List<Coords>();
+		List<Coords> output = new List<Coords>();
+		if (c.x < 0) {
+			reversedX = -1;
+			c.x = -c.x;
+		}
+		if (c.y < 0) {
+			reversedY = -1;
+			c.y = -c.y;
+		}
+
+		for (int i = 0; i <= c.x; i++) {
+			for (int j = 0; j <= c.y; j++) {
+				if (!(i == c.x && j == c.y) && !(i==0 && j == 0)) {
+					if (Mathf.Atan2 (((float)i) - 0.5f, ((float)j) + 0.5f) > Mathf.Atan2 ((float)c.x, (float)c.y) - 2 * Mathf.Epsilon
+					   && Mathf.Atan2 (((float)i) + 0.5f, ((float)j) - 0.5f) < Mathf.Atan2 ((float)c.x, (float)c.y) + 2 * Mathf.Epsilon) {
+						flippedOutput.Add (new Coords (i, j));
+					}
+				}
+			}
+		}
+		foreach (Coords flippedCoord in flippedOutput) {
+			output.Add(new Coords(flippedCoord.x * reversedX, flippedCoord.y * reversedY));
+		}
+		return output;
+	}
+
+
 	//======================================================IO Here=============================================================//
 	[System.Serializable]
 	public class BoardHandlerSave {
@@ -1546,6 +1700,31 @@ public class BoardHandler : MonoBehaviour {
 			output.AddComponent<MiscKeyHandler> ();
 			output.AddComponent<BoardHandler> ();
 			BoardHandler bh = output.GetComponent<BoardHandler> ();
+			BoardHandler oldBH = oldBoardHandler.GetComponent<BoardHandler> ();
+			bh.chaserTurn = oldBH.chaserTurn;
+			bh.doubleChaserTurn = oldBH.doubleChaserTurn;
+			bh.eliteChaserTurn = oldBH.eliteChaserTurn;
+			bh.ultimateSpawnTurn = oldBH.ultimateSpawnTurn;
+			bh.chaser = oldBH.chaser;
+			bh.eliteChaser = oldBH.eliteChaser;
+			bh.ultimateSpawn = oldBH.ultimateSpawn;
+			bh.itemSpawnDepthTolerance = oldBH.itemSpawnDepthTolerance;
+			bh.enemySpawnDepthTolerance = oldBH.enemySpawnDepthTolerance;
+			bh.emptyTile = oldBH.emptyTile;
+			bh.wallTile = oldBH.wallTile;
+			bh.substanceX = oldBH.substanceX;
+			bh.spawnableEnemies = oldBH.spawnableEnemies;
+			bh.enemyStandardDepth = oldBH.enemyStandardDepth;
+			bh.enemyRarity = oldBH.enemyRarity;
+			bh.spawnableItems = oldBH.spawnableItems;
+			bh.itemStandardDepth = oldBH.itemStandardDepth;
+			bh.itemRarity = oldBH.itemRarity;
+			bh.goalTile = oldBH.goalTile;
+			bh.minWallDensity = oldBH.minWallDensity;
+			bh.maxWallDensity = oldBH.maxWallDensity;
+
+
+
 			bh._turnNumber = this._turnNumber;
 			bh.mapHeight = this.mapHeight;
 			bh.mapWidth = this.mapWidth;

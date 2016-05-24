@@ -4,6 +4,28 @@ using UnityEngine.EventSystems;
 using System.Collections.Generic;
 
 public class ActionButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
+	
+	public Color baseColour, highlightColour, pressedColour, selectedBaseColour, selectedHighlightColour, selectedPressedColour;
+	[SerializeField] private bool _isSelected;
+	public bool isSelected {
+		get { return _isSelected; }
+		set {
+			_isSelected = value;
+			ColorBlock cb = gameObject.GetComponent<Button> ().colors;
+			if (_isSelected) {
+				Debug.Log ("Colour Change");
+				cb.normalColor = selectedBaseColour;
+				cb.highlightedColor = selectedHighlightColour;
+				cb.pressedColor = selectedPressedColour;
+			} else {
+				cb.normalColor = baseColour;
+				cb.highlightedColor = highlightColour;
+				cb.pressedColor = pressedColour;
+			}
+			gameObject.GetComponent<Button> ().colors = cb;
+		}
+	}
+
 	public char[] hotkeys;
 	Button myButton;
 	private PCHandler.Action _action;
@@ -46,7 +68,7 @@ public class ActionButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
 	{
 		myButton = GetComponent<Button>(); // <-- you get access to the button component here
 
-		myButton.onClick.AddListener( () => {triggerAction();} );  // <-- you assign a method to the button OnClick event here
+		myButton.onClick.AddListener( () => {respond();} );  // <-- you assign a method to the button OnClick event here
 	}
 
 	public void OnPointerEnter (PointerEventData data) {
@@ -68,17 +90,21 @@ public class ActionButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
 			if (numbers.Contains (hotkey)) {
 				//if (Input.GetKeyDown ((KeyCode) System.Enum.Parse(typeof(KeyCode),"Keypad" + hotkey.ToString()))) {
 				if (Input.GetKeyDown ((KeyCode)System.Enum.Parse (typeof(KeyCode), "Alpha" + hotkey.ToString ()))) {
-					triggerAction ();
+					respond ();
 				}
 			} else if (Input.GetKeyDown ((KeyCode)System.Enum.Parse (typeof(KeyCode), hotkey.ToString ().ToUpper ()))) {
-				triggerAction ();
+				respond ();
 			}
 		}
 	}
 
-	void triggerAction()
+	public void respond()
 	{
-		GameObject.FindGameObjectWithTag ("BoardHandler").GetComponent<ActionHandler> ().PerformAction (action);
+		if (!isSelected) {
+			isSelected = GameObject.FindGameObjectWithTag ("BoardHandler").GetComponent<ActionHandler> ().SelectAction (action);
+		} else {
+			GameObject.FindGameObjectWithTag ("BoardHandler").GetComponent<ActionHandler> ().TriggerAbility (null);
+		}
 	}
 
 	public void setHotkey(int i) {

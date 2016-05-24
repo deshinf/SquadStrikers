@@ -11,6 +11,11 @@ public class Tile : MonoBehaviour {
 	public bool blocksLineOfFire;
 	public Sprite highlightedSprite;
 	public bool isGoal;
+	private Targeting _targeting;
+	public Targeting targeting {
+		get { return _targeting; }
+		set { _targeting = value; }
+	} //TODO: Implement these properly.
 
 	private bool _isHighlighted = false;
 	public bool isHighlighted {

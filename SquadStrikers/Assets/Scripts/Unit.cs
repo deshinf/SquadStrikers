@@ -52,6 +52,11 @@ public abstract class Unit : MonoBehaviour {
 			case Targeting.MovementTargeting:
 				gameObject.GetComponent<SpriteRenderer> ().color = movementTargetingColour;
 				break;
+			case Targeting.InactiveFriendlyTargeting:
+			case Targeting.InactiveHostileTargeting:
+			case Targeting.InactiveMovementTargeting:
+				gameObject.GetComponent<SpriteRenderer> ().color = basicColour;
+				break;
 			default:
 				throw new System.Exception ("Invalid Targeting Type");
 			}
@@ -154,8 +159,8 @@ public abstract class Unit : MonoBehaviour {
 
 	public virtual void OnMouseDown()
 	{
-		if (targeting == Targeting.HostileTargeting || targeting == Targeting.FriendlyTargeting) {
-			GameObject.FindGameObjectWithTag("BoardHandler").GetComponent<ActionHandler>().TriggerTargetedAbility(gameObject);
+		if (targeting == Targeting.HostileTargeting || targeting == Targeting.FriendlyTargeting || targeting == Targeting.MovementTargeting) {
+			GameObject.FindGameObjectWithTag("BoardHandler").GetComponent<ActionHandler>().TriggerAbility(gameObject);
 		}
 	}
 

@@ -25,9 +25,26 @@ Left hand stat bar now displays target information on mouse over.
 
 Added permadeath save games and all required support for it.
 
+0.1.5
+
+Gameplay:
+Discharging Ancient Magics now takes no time, while Activating them now takes time.
+
+UI:
+Rewrote Targeting section of the code. It went from a dozen methods to three and reduced code by about 200 lines.
+Should also be easier to extend and modify now, making the following round of UI changes much easier to implement.
+Made every ability targetable. Previously untargetable abilities are self targetable.
+Clicking on an ability or pressing the hotkey selects it, highlighting possible targets, rather than activating it.
+When choosing targets, other abilities are displayed and can be chosen, rather than having to first choose cancel.
+
+Bugfix:
+Fixed a bug where Generic Goon, Chasers, Elite Chasers and The Destroyer all had the name "Generic Goon", leading to incorrect displays and saving and loading considering them interchangable.
+
+
 Known issues:
+If a character dies, you save and then load, they appear at (1,1) but otherwise cannot be interacted with.
+Characters who have already acted have their colour restored after saving and loading (though they still cannot act).
 Cannot cancel move actions.
-Cancel menu shouldn't exist (instead keep all possible actions visible and allow changing actions in one click.
-Should require two presses or allow self targeting for untargetted abilities).
 Right clicking on items should bring up on Left Hand panel.
 Mouse over enemy/item to see on left hand panel.
+InactiveTargeting modes currently do nothing. Neither do Tile targeting modes.

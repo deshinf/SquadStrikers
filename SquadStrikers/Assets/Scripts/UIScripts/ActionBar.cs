@@ -33,7 +33,31 @@ public class ActionBar : MonoBehaviour {
 			verticalOffset += buttonHeight;
 			i++;
 		}
+		SelectDoNothing ();
 	}
+
+	public void SelectDoNothing () {
+		UnselectAll ();
+		foreach (GameObject a in actionButtons) {
+			bool found = false;
+			if (a.GetComponent<ActionButton> ().action.actionName == "Do Nothing") {
+				GameObject.FindGameObjectWithTag ("BoardHandler").GetComponent<ActionHandler> ().SelectAction (a.GetComponent<ActionButton>().action);
+				a.GetComponent<ActionButton> ().isSelected = true;
+				found = true;
+				break;
+			}
+			if (!found) {
+				throw new UnityException ();
+			}
+		}
+	}
+
+	public void UnselectAll () {
+		foreach (GameObject b in actionButtons) {
+			b.GetComponent<ActionButton> ().isSelected = false;
+		}
+	}
+
 	public void DropItemSelector () {
 		Empty ();
 
@@ -71,6 +95,7 @@ public class ActionBar : MonoBehaviour {
 		foreach (GameObject button in actionButtons) {
 			Object.Destroy (button);
 		}
+		actionButtons.Clear ();
 	}
 
 	// Update is called once per frame

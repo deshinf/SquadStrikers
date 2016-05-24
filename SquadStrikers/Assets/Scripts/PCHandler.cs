@@ -492,7 +492,7 @@ public partial class PCHandler : Unit {
 		if (targeting == Targeting.MovementTargeting) {
 			GameObject.FindGameObjectWithTag ("BoardHandler").GetComponent<BoardHandler> ().KeepSelectedStill();
 		} else if (targeting == Targeting.HostileTargeting || targeting == Targeting.FriendlyTargeting) {
-			GameObject.FindGameObjectWithTag("BoardHandler").GetComponent<ActionHandler>().TriggerTargetedAbility(gameObject);
+			GameObject.FindGameObjectWithTag("BoardHandler").GetComponent<ActionHandler>().TriggerAbility(gameObject);
 		} else if (canMove) {
 			GameObject.FindGameObjectWithTag("BoardHandler").GetComponent<BoardHandler>().Select(this);
 		}

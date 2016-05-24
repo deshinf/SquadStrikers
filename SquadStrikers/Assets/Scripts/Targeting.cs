@@ -1,1 +1,1 @@
-﻿public enum Targeting { NoTargeting = 0, MovementTargeting = 1, HostileTargeting = 2, FriendlyTargeting = 3 }
+﻿public enum Targeting { NoTargeting = 0, MovementTargeting = 1, InactiveMovementTargeting = 4, HostileTargeting = 2, InactiveHostileTargeting = 5, FriendlyTargeting = 3, InactiveFriendlyTargeting = 6}

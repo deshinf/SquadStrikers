@@ -7,237 +7,147 @@ using System.Collections.Generic;
 
 public class ActionHandler : MonoBehaviour {
 
-	private BoardHandler boardHandler;
 	// Use this for initialization
+	BoardHandler boardHandler;
+	GameObject defaultTarget;
 	void Start () {
 		boardHandler = gameObject.GetComponent<BoardHandler> ();
 	}
 
 	public Action currentAction { get; private set; }
 
-	public void PerformAction(Action action) {
+	public bool SelectAction(Action action) {
 		PCHandler actor = boardHandler.selectedUnit ();
-		currentAction = action;
-		HashSet<Unit> targets;
-		Item i;
+		defaultTarget = null;
+		//HashSet<Unit> targets;
+		//Item i;
 		string actionName = action.actionName;
-		if (actionName == "Cancel") {
-			boardHandler.gameState = BoardHandler.GameStates.TargetMode;
-			GameObject.FindGameObjectWithTag ("StatsBar").GetComponent<StatsBar> ().displayStats (actor);
-			boardHandler.gameState = BoardHandler.GameStates.ActionMode;
-		} else {
-			Assert.IsTrue (boardHandler.gameState == BoardHandler.GameStates.ActionMode);
-			switch (actionName) {
-			case "Do Nothing":
-				GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().Log (actor.unitName + " does nothing.");
-				endActionPhase();
-				break;
-//			case "Punch":
-//				currentAction = "Punch";
-//				InitiateStandardMeleeAttack ();
-//				break;
-			case "Sword":
-				InitiateSwordAttack ();
-				break;
-			case "Axe":
-				InitiateAxeAttack ((Weapon) action.attachedItem);
-				endActionPhase();
-				break;
-			case "Spear":
-				InitiateSpearAttack ();
-				break;
-			case "Mace":
-				InitiateMaceAttack ();
-				break;
-			case "Bow":
-				InitiateBowAttack ();
-				break;
-			case "Deadeye":
-				if (actor.currentEnergy < actor.spellCost(currentAction.actionName)) {
-					GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("Not enough energy.");
-					boardHandler.gameState = BoardHandler.GameStates.TargetMode;
-					PerformAction (new Action ("Cancel", "", null));
-					break;
-				}
-				actor.deadeyeActive = true;
-				GameObject.FindGameObjectWithTag ("StatsBar").GetComponent<StatsBar> ().displayStats (actor);
-				PerformAction (new Action ("Cancel", "", null));
-				break;
-			case "Power Blow":
-				if (actor.currentEnergy < actor.spellCost(currentAction.actionName)) {
-					GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("Not enough energy.");
-					boardHandler.gameState = BoardHandler.GameStates.TargetMode;
-					PerformAction (new Action ("Cancel", "", null));
-					break;
-				}
-				actor.deadeyeActive = true;
-				GameObject.FindGameObjectWithTag ("StatsBar").GetComponent<StatsBar> ().displayStats (actor);
-				PerformAction (new Action ("Cancel", "", null));
-				break;
-			case "Mystic Blast":
-			case "Greater Mystic Blast":
-				if (actor.currentEnergy < actor.spellCost(currentAction.actionName)) {
-					GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("Not enough energy.");
-					boardHandler.gameState = BoardHandler.GameStates.TargetMode;
-					PerformAction (new Action ("Cancel", "", null));
-					break;
-				}
-				InitiateCardinalAttackTargeting (actor.spellRange(currentAction.actionName),actor.hasAbility(PCHandler.Ability.ArcingMysticBlast));
-				break;
-			case "Explosion":
-				if (boardHandler.selectedUnit ().currentEnergy < actor.spellCost(currentAction.actionName)) {
-					GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("Not enough energy.");
-					boardHandler.gameState = BoardHandler.GameStates.TargetMode;
-					PerformAction (new Action ("Cancel", "", null));
-					break;
-				}
-				targets = boardHandler.GetOtherUnitsAround (boardHandler.selected, actor.spellRadius(currentAction.actionName));
-				Debug.Log (targets.Count.ToString ());
-				foreach (Unit target in targets) {
-					TriggerAutohitSpellAttack (actor.spellPower(currentAction.actionName), target, "Explosion");
-				}
-				boardHandler.selectedUnit ().useEnergy (actor.spellCost(currentAction.actionName));
-				endActionPhase();
-				break;
-			case "Heal":
-			case "Greater Heal":
-			case "Full Restore":
-				if (boardHandler.selectedUnit ().currentEnergy < actor.spellCost(currentAction.actionName)) {
-					GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("Not enough energy.");
-					boardHandler.gameState = BoardHandler.GameStates.TargetMode;
-					PerformAction (new Action ("Cancel", "", null));
-					break;
-				}
-				InitiateNonpenetratingCardinalBuffTargeting (1);
-				break;
-			case "Discharge Ancient Magic":
-				actor.dischargeAM ();
-				if (((ActionItem)currentAction.attachedItem).itemClass == "Stone") {
-					GameObject.FindGameObjectWithTag ("StatsBar").GetComponent<StatsBar> ().displayStats (actor);
-					PerformAction (new Action ("Cancel", "", null));
-					break;
-				} else {
-					endActionPhase();
-					break;
-				}
-			case "Activate Ancient Magic":
-				if (actor.ancientMagic) {
-					actor.dischargeAM ();
-				} 
-				actor.ancientMagic = ((AncientMagic) currentAction.attachedItem);
-				((AncientMagic)currentAction.attachedItem).isActive = true;
-				GameObject.FindGameObjectWithTag ("StatsBar").GetComponent<StatsBar> ().displayStats (actor);
-				GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().Log (currentAction.attachedItem.itemName + " activated.");
-				PerformAction (new Action ("Cancel", "", null));
-				break;
-			case "Pick up Item":
-				if (boardHandler.selectedUnit ().remainingInventory > 0) {
-					i = boardHandler.getTileState (boardHandler.selected).item;
-					boardHandler.getTileState (boardHandler.selected).item = null;
-					boardHandler.selectedUnit ().acquireItem (i);
-					GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().Log (boardHandler.selectedUnit ().unitName + " has picked up " + i.itemName);
-					endActionPhase();
-					currentAction = new Action ("", "", null);
-					break;
-				} else {
-					GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().Log ("Not enough space in " + boardHandler.selectedUnit ().unitName + "'s inventory. Drop something first.");
-					Assert.IsTrue (boardHandler.gameState == BoardHandler.GameStates.ActionMode);
-					GameObject.FindGameObjectWithTag ("StatsBar").GetComponent<StatsBar> ().displayStats(actor);
-					GameObject.FindGameObjectWithTag ("ActionBar").GetComponent<ActionBar> ().DropItemSelector ();
-					currentAction = new Action ("", "", null);
-					break;
-				}
-			case "Drop Item":
-				i = boardHandler.getTileState (boardHandler.selected).item;
-				if (currentAction.attachedItem == actor.ancientMagic) {
-					//Active Ancient Magics can only be discharged, not dropped.
-					actor.dischargeAM ();
-				} else {
-					boardHandler.getTileState (boardHandler.selected).item = action.attachedItem;
-					boardHandler.selectedUnit ().loseItem (action.attachedItem);
-					action.attachedItem.isOnFloor = true;
-				}
-				boardHandler.selectedUnit ().acquireItem (i);
-				GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().Log (boardHandler.selectedUnit ().unitName + " has picked up " + i.itemName);
-				endActionPhase();
-				break;
-			case "Mass Healing":
-				if (boardHandler.selectedUnit ().currentEnergy < actor.spellCost(currentAction.actionName)) {
-					GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("Not enough energy.");
-					boardHandler.gameState = BoardHandler.GameStates.TargetMode;
-					PerformAction (new Action ("Cancel", "", null));
-					endActionPhase();
-					break;
-				}
-				targets = boardHandler.GetOtherUnitsAround (boardHandler.selected, actor.spellRadius(currentAction.actionName));
-				foreach (Unit target in targets) {
-					int initialHP = target.currentHP;
-					target.heal (actor.spellPower(currentAction.actionName));
-					GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().Log (boardHandler.selectedUnit().unitName + " heals " + target.unitName + ". " + target.unitName + " goes from " + initialHP.ToString() + " to " + target.currentHP.ToString() + " out of " + target.maxHP.ToString());
-				}		
-				boardHandler.selectedUnit().useEnergy(actor.spellCost(currentAction.actionName));
-				endActionPhase();
-				break;
-			case "Exchange Places":
-				InitiateNonpenetratingCardinalMixedTargeting (1);
-				break;
-			case "All Out Defense":
-				boardHandler.selectedUnit ().allOutDefenseActive = true;
-				endActionPhase ();
-				break;
-			default:
-				GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("Invalid Action: " + actionName + "by " + actor.unitName + ". Doing nothing.");
-				endActionPhase();
+		Assert.IsTrue (boardHandler.gameState == BoardHandler.GameStates.ActionMode);
+		switch (actionName) { //Targeting
+		case "Cancel":
+		case "Do Nothing":
+		case "Deadeye":
+		case "Activate Ancient Magic":
+		case"Pick Up Item":
+		case "Drop Item":
+		case "All Out Defense":
+			defaultTarget = boardHandler.Target (0, false, true, false, false, false, false, false, false, Targeting.FriendlyTargeting, Targeting.InactiveFriendlyTargeting, false);
+			break;
+		case "Sword":
+			defaultTarget = boardHandler.Target(1,false,false,false,true,false,false,true,true,Targeting.HostileTargeting,Targeting.InactiveHostileTargeting,actor.hasAbility (PCHandler.Ability.SwordMastery));
+			break;
+		case "Axe":
+			defaultTarget = boardHandler.Target(1,false,true,false,true,false,false,true,true,Targeting.HostileTargeting,Targeting.InactiveHostileTargeting,true);
+			//InitiateAxeAttack ((Weapon) action.attachedItem);
+			//endActionPhase();
+			break;
+		case "Spear":
+			defaultTarget = boardHandler.Target (2, true, false, false, true,false, false,actor.hasAbility (PCHandler.Ability.SpearMastery), false, Targeting.HostileTargeting, Targeting.InactiveHostileTargeting, false);
+			break;
+		case "Mace":
+			defaultTarget = boardHandler.Target (1, false, false, false, true,false,false, true, true, Targeting.HostileTargeting, Targeting.InactiveHostileTargeting,false);
+			break;
+		case "Bow":
+			defaultTarget = boardHandler.Target(3,false,false,false,true,false,false,false,false, Targeting.HostileTargeting, Targeting.InactiveHostileTargeting,false);
+			break;
+		case "Mystic Blast":
+		case "Greater Mystic Blast":
+			if (actor.currentEnergy < actor.spellCost (action.actionName)) {
+				GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("Not enough energy.");
 				break;
 			}
+			defaultTarget = boardHandler.Target (actor.spellRange (action.actionName), true, false, false, true,false,false,actor.hasAbility (PCHandler.Ability.ArcingMysticBlast), false, Targeting.HostileTargeting, Targeting.InactiveHostileTargeting,false);
+			break;
+		case "Explosion":
+			if (boardHandler.selectedUnit ().currentEnergy < actor.spellCost (action.actionName)) {
+				GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("Not enough energy.");
+				break;
+			}
+			defaultTarget = boardHandler.Target (actor.spellRadius (action.actionName), false, true, true, true, true, false, true, false, Targeting.HostileTargeting, Targeting.InactiveHostileTargeting, false);
+			break;
+		case "Heal":
+		case "Greater Heal":
+		case "Full Restore":
+			if (boardHandler.selectedUnit ().currentEnergy < actor.spellCost (action.actionName)) {
+				GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("Not enough energy.");
+				break;
+			}
+			defaultTarget = boardHandler.Target (1, true, false, true, false,false,false, false, false, Targeting.FriendlyTargeting, Targeting.InactiveFriendlyTargeting, false);
+			break;
+		case "Discharge Ancient Magic":
+			if (actor.ancientMagic == null) {
+				GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("No ancient magic active.");
+				break;
+			} else {
+				defaultTarget = boardHandler.Target (0, false, true, false, false, false, false, false, false, Targeting.FriendlyTargeting, Targeting.InactiveFriendlyTargeting, false);
+				break;
+			}
+		case "Mass Healing":
+			defaultTarget = boardHandler.Target (1, false, true, true, true, true, false, false, false, Targeting.FriendlyTargeting, Targeting.InactiveFriendlyTargeting, false);
+			break;
+		case "Exchange Places":
+			defaultTarget = boardHandler.Target (1, true, false, true, true,false,false, false, false, Targeting.MovementTargeting, Targeting.InactiveMovementTargeting, false);
+			break;
+		default:
+			GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("Invalid Action: " + actionName + ".");
+			break;
+		}
+		if (defaultTarget != null) {
+			GameObject.FindGameObjectWithTag ("ActionBar").GetComponent<ActionBar> ().UnselectAll ();
+			currentAction = action;
+			return true;
+		} else {
+			GameObject.FindGameObjectWithTag ("ActionBar").GetComponent<ActionBar> ().SelectDoNothing ();
+			GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("Action cannot be preformed: " + actionName + ". Try another action.");
+			return false;
 		}
 	}
 
-	private void InitiateCardinalAttackTargeting(int range, bool ignoresUnitBlocking) {
-		if (!boardHandler.CardinalAttackTargeting (range, ignoresUnitBlocking)) {
-			GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("No targets found. Choose another action.");
-			PerformAction (new Action ("Cancel", "", null));
-		}
-	}
-
-	private void InitiateNonpenetratingCardinalBuffTargeting(int range) {
-		if (!boardHandler.NonpenetratingCardinalBuffTargeting (range)) {
-			GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("No targets found. Choose another action.");
-			PerformAction (new Action ("Cancel", "", null));
-		}
-	}
-	private void InitiateNonpenetratingCardinalMixedTargeting(int range) {
-		if (!boardHandler.NonpenetratingCardinalMixedTargeting (range)) {
-			GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("No targets found. Choose another action.");
-			PerformAction (new Action ("Cancel", "", null));
-		}
-	}
-	private void InitiateSwordAttack() {
-		if (!boardHandler.SwordTargeting ()) {
-			GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("No targets found. Choose another action.");
-			PerformAction (new Action ("Cancel", "", null));
-		}
-	}
-	private void InitiateMaceAttack() {
-		if (!boardHandler.MaceTargeting ()) {
-			GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("No targets found. Choose another action.");
-			PerformAction (new Action ("Cancel", "", null));
-		}
-	}
-
-	private void InitiateBowAttack() {
-		if (!boardHandler.BowTargeting ()) {
-			GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("No targets found. Choose another action.");
-			PerformAction (new Action ("Cancel", "", null));
-		}
-	}
-
-	private void InitiateSpearAttack() {
-		if (!boardHandler.SpearTargeting ()) {
-			GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("No targets found. Choose another action.");
-			PerformAction (new Action ("Cancel", "", null));
-		}
-	}
+//	private void InitiateCardinalAttackTargeting(int range, bool ignoresUnitBlocking) {
+//		if (!boardHandler.CardinalAttackTargeting (range, ignoresUnitBlocking)) {
+//			GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("No targets found. Choose another action.");
+//			PerformAction (new Action ("Cancel", "", null));
+//		}
+//	}
+//
+//	private void InitiateNonpenetratingCardinalBuffTargeting(int range) {
+//		if (!boardHandler.NonpenetratingCardinalBuffTargeting (range)) {
+//			GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("No targets found. Choose another action.");
+//			PerformAction (new Action ("Cancel", "", null));
+//		}
+//	}
+//	private void InitiateNonpenetratingCardinalMixedTargeting(int range) {
+//		if (!boardHandler.NonpenetratingCardinalMixedTargeting (range)) {
+//			GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("No targets found. Choose another action.");
+//			PerformAction (new Action ("Cancel", "", null));
+//		}
+//	}
+//	private void InitiateSwordAttack() {
+//		if (!boardHandler.SwordTargeting ()) {
+//			GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("No targets found. Choose another action.");
+//			PerformAction (new Action ("Cancel", "", null));
+//		}
+//	}
+//	private void InitiateMaceAttack() {
+//		if (!boardHandler.MaceTargeting ()) {
+//			GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("No targets found. Choose another action.");
+//			PerformAction (new Action ("Cancel", "", null));
+//		}
+//	}
+//
+//	private void InitiateBowAttack() {
+//		if (!boardHandler.BowTargeting ()) {
+//			GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("No targets found. Choose another action.");
+//			PerformAction (new Action ("Cancel", "", null));
+//		}
+//	}
+//
+//	private void InitiateSpearAttack() {
+//		if (!boardHandler.SpearTargeting ()) {
+//			GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("No targets found. Choose another action.");
+//			PerformAction (new Action ("Cancel", "", null));
+//		}
+//	}
 
 	private void InitiateAxeAttack(Weapon weapon) {
 		int hitCount = 0;
@@ -276,15 +186,16 @@ public class ActionHandler : MonoBehaviour {
 		return new Coords (x, y);
 	}
 
-	//Note: This only gets called for targeted abilities and is what is called after a target is selected.
-	public void TriggerTargetedAbility(GameObject target) {
+	//Note: Target can be null to select a default target or the actor for untargetted abilities.
+	public void TriggerAbility(GameObject target) {
+		if (target == null) {
+			target = defaultTarget;
+		}
+		Assert.IsNotNull (target);
 		PCHandler actor = boardHandler.selectedUnit();
+		int initialHP;
+		Item item;
 		switch (currentAction.actionName) {
-//		case "Punch":
-//			TriggerAttack ("Punch", 0, 0, target.GetComponent<Enemy>());
-//			currentAction = "";
-//			endActionPhase();
-//			break;
 		case "Bow":
 		case "Sword":
 			TriggerAttack ((Weapon)currentAction.attachedItem, target.GetComponent<Enemy> (), true);
@@ -339,7 +250,7 @@ public class ActionHandler : MonoBehaviour {
 		case "Greater Heal":
 		case "Full Restore":
 			Unit unitTarget = target.GetComponent<Unit> ();
-			int initialHP = unitTarget.currentHP;
+			initialHP = unitTarget.currentHP;
 			if (currentAction.actionName == "Full Restore") {
 				unitTarget.fullHeal ();
 			} else {
@@ -351,6 +262,120 @@ public class ActionHandler : MonoBehaviour {
 			break;
 		case "Exchange Places":
 			boardHandler.swapPlaces (boardHandler.selected, boardHandler.FindUnit (target.GetComponent<Unit> ()));
+			endActionPhase ();
+			break;
+
+		case "Do Nothing":
+			GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().Log (actor.unitName + " does nothing.");
+			endActionPhase();
+			break;
+		case "Deadeye":
+			if (actor.currentEnergy < actor.spellCost(currentAction.actionName)) {
+				GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("Not enough energy.");
+				boardHandler.gameState = BoardHandler.GameStates.TargetMode;
+				PerformAction (new Action ("Cancel", "", null),null);
+				break;
+			}
+			actor.deadeyeActive = true;
+			GameObject.FindGameObjectWithTag ("StatsBar").GetComponent<StatsBar> ().displayStats (actor);
+			PerformAction (new Action ("Cancel", "", null),null);
+			break;
+		case "Power Blow":
+			if (actor.currentEnergy < actor.spellCost(currentAction.actionName)) {
+				GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("Not enough energy.");
+				boardHandler.gameState = BoardHandler.GameStates.TargetMode;
+				PerformAction (new Action ("Cancel", "", null),null);
+				break;
+			}
+			actor.deadeyeActive = true;
+			GameObject.FindGameObjectWithTag ("StatsBar").GetComponent<StatsBar> ().displayStats (actor);
+			PerformAction (new Action ("Cancel", "", null),null);
+			break;
+		case "Explosion":
+			if (boardHandler.selectedUnit ().currentEnergy < actor.spellCost (currentAction.actionName)) {
+				GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("Not enough energy.");
+				break;
+			}
+			HashSet<Unit> targets = boardHandler.GetOtherUnitsAround (boardHandler.selected, actor.spellRadius(currentAction.actionName));
+			Debug.Log (targets.Count.ToString ());
+			foreach (Unit t in targets) {
+				TriggerAutohitSpellAttack (actor.spellPower(currentAction.actionName), t, "Explosion");
+			}
+			boardHandler.selectedUnit ().useEnergy (actor.spellCost(currentAction.actionName));
+			endActionPhase();
+			break;
+		case "Discharge Ancient Magic":
+			if (actor.ancientMagic == null) {
+				GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("No ancient magic active.");
+				break;
+			} else {
+				actor.dischargeAM ();
+				GameObject.FindGameObjectWithTag ("StatsBar").GetComponent<StatsBar> ().displayStats (actor);
+				currentAction = new Action ("Cancel", "", null);
+				TriggerAbility(null);
+				break;
+			}
+		case "Activate Ancient Magic":
+			if (actor.ancientMagic) {
+				actor.dischargeAM ();
+			}
+			actor.ancientMagic = ((AncientMagic) currentAction.attachedItem);
+			((AncientMagic)currentAction.attachedItem).isActive = true;
+			GameObject.FindGameObjectWithTag ("StatsBar").GetComponent<StatsBar> ().displayStats (actor);
+			GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().Log (currentAction.attachedItem.itemName + " activated.");
+			PerformAction (new Action ("Cancel", "", null),null);
+			endActionPhase();
+			break;
+		case "Pick up Item":
+			if (boardHandler.selectedUnit ().remainingInventory > 0) {
+				item = boardHandler.getTileState (boardHandler.selected).item;
+				boardHandler.getTileState (boardHandler.selected).item = null;
+				boardHandler.selectedUnit ().acquireItem (item);
+				GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().Log (boardHandler.selectedUnit ().unitName + " has picked up " + item.itemName);
+				endActionPhase();
+				currentAction = new Action ("", "", null);
+				break;
+			} else {
+				GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().Log ("Not enough space in " + boardHandler.selectedUnit ().unitName + "'s inventory. Drop something first.");
+				Assert.IsTrue (boardHandler.gameState == BoardHandler.GameStates.ActionMode);
+				GameObject.FindGameObjectWithTag ("StatsBar").GetComponent<StatsBar> ().displayStats(actor);
+				GameObject.FindGameObjectWithTag ("ActionBar").GetComponent<ActionBar> ().DropItemSelector ();
+				currentAction = new Action ("", "", null);
+				break;
+			}
+		case "Drop Item":
+			item = boardHandler.getTileState (boardHandler.selected).item;
+			if (currentAction.attachedItem == actor.ancientMagic) {
+				//Active Ancient Magics can only be discharged, not dropped.
+				actor.dischargeAM ();
+			} else {
+				boardHandler.getTileState (boardHandler.selected).item = currentAction.attachedItem;
+				boardHandler.selectedUnit ().loseItem (currentAction.attachedItem);
+				currentAction.attachedItem.isOnFloor = true;
+			}
+			boardHandler.selectedUnit ().acquireItem (item);
+			GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().Log (boardHandler.selectedUnit ().unitName + " has picked up " + item.itemName);
+			endActionPhase();
+			break;
+		case "Mass Healing":
+			if (boardHandler.selectedUnit ().currentEnergy < actor.spellCost(currentAction.actionName)) {
+				GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("Not enough energy.");
+				boardHandler.gameState = BoardHandler.GameStates.TargetMode;
+				PerformAction (new PCHandler.Action("Cancel","",null as Item), null);
+				endActionPhase();
+				break;
+			}
+			targets = boardHandler.GetOtherUnitsAround (boardHandler.selected, actor.spellRadius(currentAction.actionName));
+			foreach (Unit t in targets) {
+				initialHP = t.currentHP;
+				t.heal (actor.spellPower(currentAction.actionName));
+				GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().Log (boardHandler.selectedUnit().unitName + " heals " + t.unitName + ". " + t.unitName + " goes from " + initialHP.ToString() + " to " + t.currentHP.ToString() + " out of " + t.maxHP.ToString());
+			}		
+			boardHandler.selectedUnit().useEnergy(actor.spellCost(currentAction.actionName));
+			endActionPhase();
+			break;
+		case "All Out Defense":
+			boardHandler.selectedUnit ().allOutDefenseActive = true;
 			endActionPhase ();
 			break;
 		default:
@@ -450,6 +475,14 @@ public class ActionHandler : MonoBehaviour {
 			boardHandler.gameState = BoardHandler.GameStates.MovementMode;	
 			currentAction = new Action ("", "", null);
 
+	}
+
+	//NOTE: THIS METHOD IS DANGEROUS. DO NOT USE IT UNLESS YOU KNOW WHAT YOU ARE DOING.
+	//Immediately performs an action, bypassing the usual targeting and checks.
+	public void PerformAction (Action action, GameObject target)
+	{
+		currentAction = action;
+		TriggerAbility (target);
 	}
 
 	// Update is called once per frame
