@@ -31,6 +31,8 @@ public class ActionHandler : MonoBehaviour {
 		case"Pick Up Item":
 		case "Drop Item":
 		case "All Out Defense":
+		case "Undo Movement":
+		case "Exit Level":
 			defaultTarget = boardHandler.Target (0, false, true, false, false, false, false, false, false, Targeting.FriendlyTargeting, Targeting.InactiveFriendlyTargeting, false);
 			break;
 		case "Sword":
@@ -378,9 +380,25 @@ public class ActionHandler : MonoBehaviour {
 			boardHandler.selectedUnit ().allOutDefenseActive = true;
 			endActionPhase ();
 			break;
+		case "Undo Movement":
+			boardHandler.UndoMove ();
+			endActionPhase ();
+			break;
+		case "Exit Level":
+			Assert.IsTrue (boardHandler.getTileState (boardHandler.selected).tile.isGoal);
+			if (GameObject.FindGameObjectWithTag ("PlayerTeam").GetComponent<PlayerTeamScript> ().depth == 10) {
+				UnityEngine.SceneManagement.SceneManager.LoadScene ("VictoryScreen");
+				break;
+			} else {
+				((PCHandler)boardHandler.selectedUnit ()).Ascend ();
+				boardHandler.gameState = BoardHandler.GameStates.MovementMode;	
+				currentAction = new Action ("", "", null);
+				break;
+			}
 		default:
 			throw new System.Exception ("Invalid Ability");
 		}
+		boardHandler.canUndoMovement = false;
 	}
 
 

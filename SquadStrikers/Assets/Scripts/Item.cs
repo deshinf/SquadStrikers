@@ -30,6 +30,13 @@ public abstract class Item : MonoBehaviour {
 		}
 	}
 
+
+	public void OnMouseOver() {
+		if (Input.GetMouseButtonDown (1) && isOnFloor) {
+			GameObject.FindGameObjectWithTag ("StatsBar").GetComponent<StatsBar>().displayStats(this);
+		}
+	}
+
 	public void updatePosition(){
 		//Checks the game board to find where it should be and updates its position to match. Also sets it's isOnFloor to true.
 		isOnFloor = true;

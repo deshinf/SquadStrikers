@@ -322,6 +322,10 @@ public partial class PCHandler : Unit {
 	public List<Action> actionList {
 		get {
 			List<Action> actions = new List<Action> {new Action ("Do Nothing", "This unit will end its turn.", null)};
+			BoardHandler boardHandler = GameObject.FindGameObjectWithTag ("BoardHandler").GetComponent<BoardHandler> ();
+			if (boardHandler.getTileState (boardHandler.FindUnit (this)).tile.isGoal) {
+				actions.Add (new Action("Exit Level", "This unit will leave the level. Once all surviving squad members have done this, you move on to the next level. If this is the last level, doing this instantly wins the game.", null));
+			}
 			foreach (Item item in inventory) {
 				if (item is ActionItem) {
 					actions.Add (((ActionItem)item).CreateAction ());
@@ -360,13 +364,15 @@ public partial class PCHandler : Unit {
 			if (hasAbility (Ability.GroupHeal)) {
 				actions.Add(new Action("Mass Healing","Restores 20 HP to all adjacent allies. Costs 100 energy", null));
 			}
-			BoardHandler boardHandler = GameObject.FindGameObjectWithTag ("BoardHandler").GetComponent<BoardHandler> ();
 			Item onSquare = boardHandler.getTileState (boardHandler.FindUnit (this)).item;
 			if (onSquare) {
 				Debug.Log ("Creating Pickup");
 				actions.Add (new Action ("Pick up Item", "Pick up " + onSquare.itemName + ":" + System.Environment.NewLine + onSquare.description, onSquare));
 			}
-			Debug.Log ("NumberOfActions: " + actions.Count.ToString());
+			if (boardHandler.canUndoMovement) {
+				actions.Add (new Action("Undo Movement", "Undoes this unit's movement. Cannot be done once an action is performed (even an instant one)", null));
+			}
+//			Debug.Log ("NumberOfActions: " + actions.Count.ToString());
 			return actions;
 		}
 	}
@@ -384,13 +390,11 @@ public partial class PCHandler : Unit {
 		get {
 			return _canMove;
 		} set {
-			if (_canMove == value) {
-				return;
-			}
 			_canMove = value;
 			if (_canMove) {
 				gameObject.GetComponent<SpriteRenderer>().sprite = baseSprite;
 			} else {
+				Debug.Log ("Can't move");
 				gameObject.GetComponent<SpriteRenderer>().sprite = fatiguedSprite;
 			}
 		}
@@ -1024,7 +1028,6 @@ public partial class PCHandler : Unit {
 			pch.grid = this.grid;
 			pch.ascended = this.ascended;
 			pch.stoneDamageBonus = this.stoneDamageBonus;
-			pch._canMove = this._canMove;
 			pch.inventory = new List<Item>();
 			foreach(Item.ItemSave i in this.inventory) {
 				pch.inventory.Add(i.ToGameObject().GetComponent<Item>());
@@ -1045,12 +1048,16 @@ public partial class PCHandler : Unit {
 			pch.abilityList = this.abilityList;
 			//pch.baseSprite = this.baseSprite;
 			pch.dead = this.dead;
+			if (pch.dead) {
+				output.transform.Translate(new Vector3(1000f,1000f,1000f));
+			}
 			//pch.fatiguedSprite = this.fatiguedSprite;
 			pch._characterClass = this._characterClass;
 			pch.basicColour = this.basicColour.ToColor ();
 			pch.friendlyTargetingColour = this.friendlyTargetingColour.ToColor();
 			pch.hostileTargetingColour = this.hostileTargetingColour.ToColor();
 			pch.movementTargetingColour = this.movementTargetingColour.ToColor();
+			pch.canMove = this._canMove;
 			pch.unitName = this._unitName;
 			pch.currentHP = this.currentHP;
 			pch.currentEnergy = this.currentEnergy;

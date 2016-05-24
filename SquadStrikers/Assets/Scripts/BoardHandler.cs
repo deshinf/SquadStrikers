@@ -11,6 +11,9 @@ public class BoardHandler : MonoBehaviour {
 
 	//A by-value pair of ints representing a position on the gameBoard in squares.
 	public GameObject defaultPlayerTeam;
+	public bool canUndoMovement = false;
+	public Coords undoPosition;
+	public int undoSubstanceX;
 	public bool suppressInitialization = false;
 	public static BoardHandler GetBoardHandler() {
 		return GameObject.FindGameObjectWithTag ("BoardHandler").GetComponent<BoardHandler> ();
@@ -270,13 +273,14 @@ public class BoardHandler : MonoBehaviour {
 					Debug.Log ("Player " + player + "loaded at (" + c.x + "," + c.y + ")");
 					output.unit = GameObject.FindGameObjectWithTag ("PlayerTeam").GetComponent<PlayerTeamScript> ().getTeamMember (this.player);
 					output.unit.gameObject.transform.position = new Vector3 (c.x * tileSize, c.y * tileSize, -0.1f);
+					((PCHandler)output.unit).canMove = ((PCHandler)output.unit).canMove; //I have no idea why this is neccessary, but it fixes a bug where units display as unfatigued after loading.
 					Debug.Log (output.unit.unitName + " Now at (" + output.unit.gameObject.transform.position.x + "," + output.unit.gameObject.transform.position.y + ")");
 				} else {
 					output.unit = null;
 				}
 				if (this.item != null) {
 					output.item = this.item.ToGameObject ().GetComponent<Item> ();
-					output.item.gameObject.transform.position = new Vector3 (c.x * tileSize, c.y * tileSize, -0.1f);
+					output.item.gameObject.transform.position = new Vector3 (c.x * tileSize, c.y * tileSize, -0.05f);
 				} else {
 					output.item = null;
 				}
@@ -336,6 +340,16 @@ public class BoardHandler : MonoBehaviour {
 	}
 	public void MoveSelectedTo(Coords c) {
 		Assert.IsTrue (is_selected);
+
+		canUndoMovement = true;
+		if (getTileState (c).substanceX == null) {
+			undoSubstanceX = 0;
+		} else {
+			undoSubstanceX = getTileState (c).substanceX.amount;
+			Debug.Log ("Substance X amount: " + undoSubstanceX);
+		}
+		undoPosition = selected;
+
 		if (selectedUnit().hasAbility(PCHandler.Ability.CarefulStrike)) {
 			if (selected == c) {
 				selectedUnit ().carefulStrikeActive = true;
@@ -346,16 +360,22 @@ public class BoardHandler : MonoBehaviour {
 		MoveUnit (selected, c);
 		selected = c;
 		((PCHandler)getTileState (c).unit).canMove = false;
-		if (getTileState(c).tile.isGoal) {
-			if (GameObject.FindGameObjectWithTag ("PlayerTeam").GetComponent<PlayerTeamScript> ().depth == 10) {
-				UnityEngine.SceneManagement.SceneManager.LoadScene ("VictoryScreen");
-			} else {
-				((PCHandler)selectedUnit ()).Ascend ();
-				Unselect ();
-			}
-		} else {
-			gameState = GameStates.ActionMode;
+		gameState = GameStates.ActionMode;
+	}
+
+
+	public void UndoMove() {
+		Assert.IsTrue (canUndoMovement);
+		Assert.IsTrue(is_selected);
+		if (undoSubstanceX > 0) {
+			SubstanceX sX = ((GameObject) Instantiate (substanceX, new Vector2 (selected.x * tileSize, selected.y * tileSize), Quaternion.identity)).GetComponent<SubstanceX>();
+			sX.amount = undoSubstanceX;
+			getTileState (selected).substanceX = sX;
+			GameObject.FindGameObjectWithTag ("PlayerTeam").GetComponent<PlayerTeamScript> ().score -= undoSubstanceX;
 		}
+		MoveSelectedTo (undoPosition);
+		selectedUnit ().canMove = true;
+		canUndoMovement = false;
 	}
 
 	public Coords FindTile (Tile toFind)

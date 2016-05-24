@@ -40,11 +40,24 @@ When choosing targets, other abilities are displayed and can be chosen, rather t
 Bugfix:
 Fixed a bug where Generic Goon, Chasers, Elite Chasers and The Destroyer all had the name "Generic Goon", leading to incorrect displays and saving and loading considering them interchangable.
 
+0.1.6:
+
+Gameplay:
+Now possible to stand on level exit. Leaving level is an action.
+
+UI:
+Added support for undoing moves. Cannot undo once an action is performed, even an instant one or a do nothing.
+As with units, right clicking on items now brings up a description on the left.
+Added hotkeys to end turn: Enter, Space
+
+Bugfixes:
+Fixed bug where whether you could pick up an item or leave the level was based on where you were before moving, rather than after.
+Fixed a bug where if a character died, you save and then load, they appear at (1,1) but otherwise cannot be interacted with.
+Fixed a bug where if a character acted, then the game was saved and loaded, they appeared to have not acted but still cannot act again.
 
 Known issues:
-If a character dies, you save and then load, they appear at (1,1) but otherwise cannot be interacted with.
-Characters who have already acted have their colour restored after saving and loading (though they still cannot act).
-Cannot cancel move actions.
-Right clicking on items should bring up on Left Hand panel.
 Mouse over enemy/item to see on left hand panel.
 InactiveTargeting modes currently do nothing. Neither do Tile targeting modes.
+Highlighting for tiles should be done via colour filter, not diferent sprite.
+Need ability to scroll when there are too many actions
+Careful Strike Bonus does not carry over between levels.

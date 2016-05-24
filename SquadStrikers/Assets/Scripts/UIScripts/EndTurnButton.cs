@@ -4,10 +4,10 @@ using UnityEngine.UI;
 
 public class EndTurnButton : MonoBehaviour {
 	Button myButton;
-
+	public KeyCode[] hotkeys;
 	// Use this for initialization
 	void Start () {
-	
+		hotkeys = new KeyCode[]{ KeyCode.Space, KeyCode.KeypadEnter, KeyCode.Return };
 	}
 
 
@@ -20,6 +20,10 @@ public class EndTurnButton : MonoBehaviour {
 
 	// Update is called once per frame
 	void Update () {
-	
+		foreach(KeyCode k in hotkeys) {
+			if (Input.GetKeyDown (k)) {
+				BoardHandler.GetBoardHandler().EndTurn();
+			}
+		}
 	}
 }
