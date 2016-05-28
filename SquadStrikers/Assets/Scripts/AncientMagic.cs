@@ -46,6 +46,7 @@ public class AncientMagic : ActionItem {
 	public class AncientMagicSave : ActionItemSave {
 		public string itemName;
 		public int charges;
+		public bool isActive;
 		//Owner takes possession of this instead.
 //		public int _owner;
 		public bool _isOnFloor;
@@ -54,6 +55,7 @@ public class AncientMagic : ActionItem {
 		public AncientMagicSave(AncientMagic am) {
 			itemName = am.itemName;
 			charges = am.charges;
+			isActive = am.isActive;
 //			if (am.owner == null) {
 //				_owner = -1;
 //			} else {
@@ -82,6 +84,7 @@ public class AncientMagic : ActionItem {
 				output.GetComponent<SpriteRenderer> ().enabled = false;
 			}
 			output.GetComponent<AncientMagic> ().charges = charges;
+			output.GetComponent<AncientMagic> ().isActive = isActive;
 			return output;
 		}
 	}

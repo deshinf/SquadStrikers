@@ -30,6 +30,11 @@ public abstract class Item : MonoBehaviour {
 		}
 	}
 
+	public void OnMouseDown() {
+		BoardHandler bh = BoardHandler.GetBoardHandler ();
+		bh.getTileState (bh.FindItem (this)).tile.OnMouseDown ();
+	}
+
 
 	public void OnMouseOver() {
 		if (Input.GetMouseButtonDown (1) && isOnFloor) {

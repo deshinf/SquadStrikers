@@ -6,7 +6,10 @@ public class MessageBox : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-	
+		Text txt = gameObject.GetComponentInChildren<Text>();
+		RectTransform rt = gameObject.GetComponentInChildren<Text> ().gameObject.GetComponent<RectTransform> ();
+		rt.anchoredPosition = new Vector2(0f,0f);
+		rt.sizeDelta = new Vector2 (0f, txt.preferredHeight);
 	}
 	
 	// Update is called once per frame

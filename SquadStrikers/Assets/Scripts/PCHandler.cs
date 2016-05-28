@@ -454,6 +454,7 @@ public partial class PCHandler : Unit {
 	public CharacterClass characterClass { get { return _characterClass; } private set { _characterClass = value; } }
 
 	void randomTeleport(int range) {
+		Debug.Log ("Range = " + range);
 		BoardHandler bH = GameObject.FindGameObjectWithTag ("BoardHandler").GetComponent<BoardHandler> ();
 		List<BoardHandler.Coords> candidates = bH.getOpenTilesAround (bH.FindUnit (this), range);
 		if (candidates.Count == 0) {
@@ -462,6 +463,7 @@ public partial class PCHandler : Unit {
 			bH.MoveSelectedTo(candidates [UnityEngine.Random.Range (0, candidates.Count - 1)]);
 			GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().Log ("Teleport successful.");
 		}
+		bH.canUndoMovement = false;
 	}
 
 	void Init (string cClass) {
@@ -472,7 +474,7 @@ public partial class PCHandler : Unit {
 			fullEnergy ();
 			isFriendly = true;
 			grid = characterClass.grid.MakeConcrete ();
-			Debug.Log ("Made Grid");
+//			Debug.Log ("Made Grid");
 		}
 	}
 
@@ -492,13 +494,21 @@ public partial class PCHandler : Unit {
 
 	public override void OnMouseDown()
 	{
-		//Debug.Log ("Character " + this.unitName + " clicked on.");
-		if (targeting == Targeting.MovementTargeting) {
-			GameObject.FindGameObjectWithTag ("BoardHandler").GetComponent<BoardHandler> ().KeepSelectedStill();
-		} else if (targeting == Targeting.HostileTargeting || targeting == Targeting.FriendlyTargeting) {
-			GameObject.FindGameObjectWithTag("BoardHandler").GetComponent<ActionHandler>().TriggerAbility(gameObject);
-		} else if (canMove) {
-			GameObject.FindGameObjectWithTag("BoardHandler").GetComponent<BoardHandler>().Select(this);
+		BoardHandler bh = GameObject.FindGameObjectWithTag ("BoardHandler").GetComponent<BoardHandler> ();
+		if (bh.gameState == BoardHandler.GameStates.ActionMode) {
+			//Debug.Log ("Character " + this.unitName + " clicked on.");
+			if (targeting == Targeting.HostileTargeting || targeting == Targeting.FriendlyTargeting || targeting == Targeting.MovementTargeting) {
+				GameObject.FindGameObjectWithTag ("BoardHandler").GetComponent<ActionHandler> ().TriggerAbility (gameObject);
+			}
+		} else if ( bh.gameState == BoardHandler.GameStates.MovementMode) {
+
+			if (targeting == Targeting.MovementTargeting) {
+				GameObject.FindGameObjectWithTag ("BoardHandler").GetComponent<BoardHandler> ().KeepSelectedStill ();
+			} else if (canMove) {
+				GameObject.FindGameObjectWithTag ("BoardHandler").GetComponent<BoardHandler> ().Select (this);
+			} else {
+				GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("That unit has already moved this turn.");
+			}
 		}
 	}
 	
@@ -594,7 +604,7 @@ public partial class PCHandler : Unit {
 		case Ability.WeaponMaster:
 			return "Increases accuracy with weapons by 10.";
 		case Ability.BowMastery:
-			return "Increases damage by 5 and accuracy by 20 for bows.";
+			return "Allows you to lob arrows over the heads of other units.";
 		case Ability.Isolationist:
 			return "Heal 10 HP when you end a turn with no-one next to you (including diagonals)";
 		case Ability.CarefulStrike:
@@ -725,8 +735,8 @@ public partial class PCHandler : Unit {
 	public int magicalReserves2Modifier = 50;
 	public int magicalReserves3Modifier = 75; //Added to mana if you have this level of trait. Cumulative.
 	public int manaCyclingModifier = 5;
-	public int bowMasteryBonusDamage = 5;
-	public int bowMasteryBonusAttack = 10;
+//	public int bowMasteryBonusDamage = 5;
+//	public int bowMasteryBonusAttack = 10;
 	public int IsolationistHealRate = 10;
 	public int strengthReserveBonus = 10;
 	public int carefulStrikeBonus = 25;
@@ -945,7 +955,7 @@ public partial class PCHandler : Unit {
 		public int currentEnergy;
 		public bool _canMove = true;
 		public List<Item.ItemSave> inventory;
-		public AncientMagic.AncientMagicSave ancientMagic;
+		public int ancientMagic = -1; //Which inventory element is the active ancient magic. -1 means none.
 		public bool carefulStrikeActive = false;
 		public bool strengthReserveActive = false;
 		public bool allOutDefenseActive = false;
@@ -956,7 +966,7 @@ public partial class PCHandler : Unit {
 		public bool dead; //TODO: Do something about this.
 		//public Sprite fatiguedSprite; //Sprite used when unit has already moved.
 		public CharacterClass _characterClass;
-		public ColorSave basicColour = new ColorSave(Color.white);
+		public ColorSave nonTargetingColour = new ColorSave(Color.clear);
 		public ColorSave friendlyTargetingColour = new ColorSave(Color.green);
 		public ColorSave hostileTargetingColour = new ColorSave(Color.red);
 		public ColorSave movementTargetingColour = new ColorSave(Color.yellow);
@@ -970,13 +980,11 @@ public partial class PCHandler : Unit {
 			this.stoneDamageBonus = pc.stoneDamageBonus;
 			this._canMove = pc._canMove;
 			this.inventory = new List<Item.ItemSave>();
-			foreach(Item i in pc.inventory) {
-				inventory.Add(Item.ItemSave.CreateFromItem(i));
-			}
-			if (pc.ancientMagic != null) {
-				this.ancientMagic = new AncientMagic.AncientMagicSave(pc.ancientMagic);
-			} else {
-				this.ancientMagic = null;
+			for (int i = 0; i < pc.inventory.Count; i++) {
+				inventory.Add(Item.ItemSave.CreateFromItem(pc.inventory[i]));
+				if (pc.inventory[i] == pc.ancientMagic) {
+					ancientMagic = i;
+				}
 			}
 			this.carefulStrikeActive = pc.carefulStrikeActive;
 			this.strengthReserveActive = pc.strengthReserveActive;
@@ -988,7 +996,7 @@ public partial class PCHandler : Unit {
 			this.dead = pc.dead;
 			//this.fatiguedSprite = pc.fatiguedSprite;
 			this._characterClass = pc._characterClass;
-			this.basicColour = new ColorSave(pc.basicColour);
+			this.nonTargetingColour = new ColorSave(pc.nonTargetingColour);
 			this.friendlyTargetingColour = new ColorSave(pc.friendlyTargetingColour);
 			this.hostileTargetingColour = new ColorSave(pc.hostileTargetingColour);
 			this.movementTargetingColour = new ColorSave(pc.movementTargetingColour);
@@ -1035,8 +1043,8 @@ public partial class PCHandler : Unit {
 			foreach (Item i in pch.inventory) {
 				i.owner = pch;
 			}
-			if (this.ancientMagic != null) {
-				pch.ancientMagic = (this.ancientMagic).ToGameObject ().GetComponent<AncientMagic> ();
+			if (this.ancientMagic != -1) {
+				pch.ancientMagic = (AncientMagic) pch.inventory [this.ancientMagic];
 			} else {
 				pch.ancientMagic = null;
 			}
@@ -1053,7 +1061,7 @@ public partial class PCHandler : Unit {
 			}
 			//pch.fatiguedSprite = this.fatiguedSprite;
 			pch._characterClass = this._characterClass;
-			pch.basicColour = this.basicColour.ToColor ();
+			pch.nonTargetingColour = this.nonTargetingColour.ToColor ();
 			pch.friendlyTargetingColour = this.friendlyTargetingColour.ToColor();
 			pch.hostileTargetingColour = this.hostileTargetingColour.ToColor();
 			pch.movementTargetingColour = this.movementTargetingColour.ToColor();

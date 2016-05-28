@@ -7,7 +7,7 @@ public class EndTurnButton : MonoBehaviour {
 	public KeyCode[] hotkeys;
 	// Use this for initialization
 	void Start () {
-		hotkeys = new KeyCode[]{ KeyCode.Space, KeyCode.KeypadEnter, KeyCode.Return };
+		hotkeys = new KeyCode[]{ KeyCode.Space };
 	}
 
 

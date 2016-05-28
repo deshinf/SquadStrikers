@@ -54,18 +54,18 @@ public class Weapon : ActionItem {
 		string lineBreak = System.Environment.NewLine;
 		if (owner) {
 			output = itemName + "(" + itemClass + "):" + lineBreak + description + lineBreak;
-			if (itemClass == "Bow" && owner.hasAbility (PCHandler.Ability.BowMastery)) {
-				output += "Accuracy: " + attack + "+" + owner.attack + "+" + owner.bowMasteryBonusAttack + "=" + (attack + owner.attack + owner.bowMasteryBonusAttack) + lineBreak;
-			}
-			else {
-				output += "Accuracy: " + attack + "+" + owner.attack + "=" + (attack + owner.attack) + lineBreak;
-			}
-			if (itemClass == "Bow" && owner.hasAbility (PCHandler.Ability.BowMastery)) {
-				output += "Damage: " + damage + "+" + owner.damage + "+" + owner.bowMasteryBonusAttack + "=" + (damage + owner.damage + owner.bowMasteryBonusDamage) + lineBreak;
-			}
-			else {
-				output += "Damage: " + damage + "+" + owner.damage + "=" + (damage + owner.damage) + lineBreak;
-			}
+//			if (itemClass == "Bow" && owner.hasAbility (PCHandler.Ability.BowMastery)) {
+//				output += "Accuracy: " + attack + "+" + owner.attack + "+" + owner.bowMasteryBonusAttack + "=" + (attack + owner.attack + owner.bowMasteryBonusAttack) + lineBreak;
+//			}
+//			else {
+			output += "Accuracy: " + attack + "+" + owner.attack + "=" + (attack + owner.attack) + lineBreak;
+//			}
+//			if (itemClass == "Bow" && owner.hasAbility (PCHandler.Ability.BowMastery)) {
+//				output += "Damage: " + damage + "+" + owner.damage + "+" + owner.bowMasteryBonusAttack + "=" + (damage + owner.damage + owner.bowMasteryBonusDamage) + lineBreak;
+//			}
+//			else {
+			output += "Damage: " + damage + "+" + owner.damage + "=" + (damage + owner.damage) + lineBreak;
+//			}
 			output += "Charges: " + charges + "/" + maxCharges;
 		} else {
 			output = itemName + "(" + itemClass + "):" + lineBreak + description + lineBreak;

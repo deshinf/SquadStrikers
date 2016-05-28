@@ -171,18 +171,18 @@ public class StatsBar : MonoBehaviour {
 			Weapon w = (Weapon)(action.attachedItem);
 			output += lineBreak + lineBreak + "Target: " + (target.GetComponent<Unit> ()).unitName + lineBreak;
 			int accuracy , damage;
-			if (w.itemClass == "Bow" && w.owner.hasAbility (PCHandler.Ability.BowMastery)) {
-				accuracy = w.attack + w.owner.attack + w.owner.bowMasteryBonusAttack;
-			}
-			else {
-				accuracy = w.attack + w.owner.attack;
-			}
-			if (w.itemClass == "Bow" && w.owner.hasAbility (PCHandler.Ability.BowMastery)) {
-				damage = w.damage + w.owner.damage + w.owner.bowMasteryBonusDamage;
-			}
-			else {
-				damage = w.damage + w.owner.damage;
-			}
+//			if (w.itemClass == "Bow" && w.owner.hasAbility (PCHandler.Ability.BowMastery)) {
+//				accuracy = w.attack + w.owner.attack + w.owner.bowMasteryBonusAttack;
+//			}
+//			else {
+			accuracy = w.attack + w.owner.attack;
+//			}
+//			if (w.itemClass == "Bow" && w.owner.hasAbility (PCHandler.Ability.BowMastery)) {
+//				damage = w.damage + w.owner.damage + w.owner.bowMasteryBonusDamage;
+//			}
+//			else {
+			damage = w.damage + w.owner.damage;
+//			}
 			output += "Accuracy:" + accuracy + "-" + (target.GetComponent<Unit>()).dodge + "=" + (accuracy - (target.GetComponent<Unit>()).dodge) + "%" + lineBreak;
 			output += "Damage:" + damage + "-(" + (target.GetComponent<Unit>()).minDefense + " to " + (target.GetComponent<Unit>()).maxDefense + ")=" +
 			((damage - (target.GetComponent<Unit>()).maxDefense) > 0 ? (damage - (target.GetComponent<Unit>()).maxDefense) : 0) + " to " +

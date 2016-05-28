@@ -14,6 +14,7 @@ public class SaveGamesListScript : MonoBehaviour {
 	public List<GameObject> saveGameButtons;
 
 	public void Fill() {
+		Empty ();
 		float buttonHeight = saveGameButtonPrefab.GetComponent<RectTransform> ().rect.height;
 		float menuHeight = gameObject.GetComponent<RectTransform> ().rect.height;
 		float verticalOffset = buttonHeight/2;
@@ -31,6 +32,14 @@ public class SaveGamesListScript : MonoBehaviour {
 			i++;
 		}
 	}
+
+	public void Empty() {
+		foreach (GameObject button in saveGameButtons) {
+			Object.Destroy (button);
+		}
+		saveGameButtons.Clear ();
+	}
+
 
 	// Update is called once per frame
 	void Update () {

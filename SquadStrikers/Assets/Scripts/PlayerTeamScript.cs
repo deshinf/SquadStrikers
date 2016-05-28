@@ -84,6 +84,16 @@ public class PlayerTeamScript : MonoBehaviour {
 
 	// Update is called once per frame
 	void Update () {
+		if (GameObject.FindGameObjectWithTag ("BoardHandler")) {
+			if (BoardHandler.GetBoardHandler ().gameState == BoardHandler.GameStates.MovementMode) {
+				for (int i = 0; i < TEAM_SIZE; i++) {
+					if (Input.GetKeyDown ((KeyCode)System.Enum.Parse (typeof(KeyCode), "Keypad" + (i + 1).ToString ())) ||
+					   Input.GetKeyDown ((KeyCode)System.Enum.Parse (typeof(KeyCode), "Alpha" + (i + 1).ToString ()))) {
+						_team [i].OnMouseDown ();
+					}
+				}
+			}
+		}
 	}
 
 
@@ -127,6 +137,10 @@ public class PlayerTeamScript : MonoBehaviour {
 				pts._team [i].fatiguedSprite = oldPlayerTeam.GetComponent<PlayerTeamScript> ()._team [i].fatiguedSprite;
 				pts._team [i].baseSprite = oldPlayerTeam.GetComponent<PlayerTeamScript> ()._team [i].baseSprite;
 				pts._team [i].gameObject.GetComponent<SpriteRenderer> ().sprite = oldPlayerTeam.GetComponent<PlayerTeamScript> ()._team [i].baseSprite;
+				oldPlayerTeam.GetComponent<PlayerTeamScript> ()._team [i].gameObject.transform.Find ("ActiveHighlighting").SetParent (pts._team [i].gameObject.transform);
+				pts._team [i].gameObject.transform.Find ("ActiveHighlighting").transform.position = new Vector2 (0f, 0f);
+				oldPlayerTeam.GetComponent<PlayerTeamScript> ()._team [i].gameObject.transform.Find ("InactiveHighlighting").SetParent (pts._team [i].gameObject.transform);
+				pts._team [i].gameObject.transform.Find ("InactiveHighlighting").transform.position = new Vector2 (0f, 0f);
 				pts._team [i].gameObject.transform.parent = pts.gameObject.transform;
 			}
 			oldPlayerTeam.tag = "Untagged";

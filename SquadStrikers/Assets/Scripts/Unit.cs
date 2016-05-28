@@ -20,48 +20,45 @@ public abstract class Unit : MonoBehaviour {
 	public virtual int energyRegen { get; set; } //Gain this much each turn up to max.
 	[SerializeField] private string _unitName;
 	public virtual string unitName {get { return _unitName; } set { _unitName = value; } }
-
-	public Color basicColour = Color.white;
+	public Color nonTargetingColour = Color.clear;
 	public Color friendlyTargetingColour = Color.green;
 	public Color hostileTargetingColour = Color.red;
 	public Color movementTargetingColour = Color.yellow;
+	private Targeting _targeting;
+	public Targeting targeting {
+		get { return _targeting; }
+		set { _targeting = value;
+			if (_targeting == Targeting.MovementTargeting || _targeting == Targeting.InactiveMovementTargeting) {
+				gameObject.transform.Find ("InactiveHighlighting").GetComponent<SpriteRenderer> ().color = movementTargetingColour;
+			} else if (_targeting == Targeting.HostileTargeting || _targeting == Targeting.InactiveHostileTargeting) {
+				gameObject.transform.Find ("InactiveHighlighting").GetComponent<SpriteRenderer> ().color = hostileTargetingColour;
+			} else if (_targeting == Targeting.FriendlyTargeting || _targeting == Targeting.InactiveFriendlyTargeting) {
+				gameObject.transform.Find ("InactiveHighlighting").GetComponent<SpriteRenderer> ().color = friendlyTargetingColour;
+			}
+			if (_targeting != Targeting.NoTargeting) {
+				Color c = gameObject.transform.Find ("InactiveHighlighting").GetComponent<SpriteRenderer> ().color;
+				c.a = 0.2f;
+				gameObject.transform.Find ("InactiveHighlighting").GetComponent<SpriteRenderer> ().color = c;
+			}
+			if (_targeting == Targeting.MovementTargeting) {
+				gameObject.transform.Find ("ActiveHighlighting").GetComponent<SpriteRenderer> ().color = movementTargetingColour;
+			} else if (_targeting == Targeting.HostileTargeting) {
+				gameObject.transform.Find ("ActiveHighlighting").GetComponent<SpriteRenderer> ().color = hostileTargetingColour;
+			} else if (_targeting == Targeting.FriendlyTargeting) {
+				gameObject.transform.Find ("ActiveHighlighting").GetComponent<SpriteRenderer> ().color = friendlyTargetingColour;
+			}
+			if (_targeting == Targeting.NoTargeting) {
+				gameObject.transform.Find ("ActiveHighlighting").GetComponent<SpriteRenderer> ().color = nonTargetingColour;
+				gameObject.transform.Find ("InactiveHighlighting").GetComponent<SpriteRenderer> ().color = nonTargetingColour;
+			}
+		}
+	}
 
 	public bool allowsHostilesThrough() {
 		return (this is Enemy);
 	}
 
 
-	private Targeting _targeting = Targeting.NoTargeting;
-	public Targeting targeting {
-		get { return _targeting; }
-		set {
-			if (_targeting == value) {
-				return;
-			}
-			_targeting = value;
-			switch (_targeting) {
-			case Targeting.NoTargeting:
-				gameObject.GetComponent<SpriteRenderer> ().color = basicColour;
-				break;
-			case Targeting.FriendlyTargeting:
-				gameObject.GetComponent<SpriteRenderer> ().color = friendlyTargetingColour;
-				break;
-			case Targeting.HostileTargeting:
-				gameObject.GetComponent<SpriteRenderer> ().color = hostileTargetingColour;
-				break;
-			case Targeting.MovementTargeting:
-				gameObject.GetComponent<SpriteRenderer> ().color = movementTargetingColour;
-				break;
-			case Targeting.InactiveFriendlyTargeting:
-			case Targeting.InactiveHostileTargeting:
-			case Targeting.InactiveMovementTargeting:
-				gameObject.GetComponent<SpriteRenderer> ().color = basicColour;
-				break;
-			default:
-				throw new System.Exception ("Invalid Targeting Type");
-			}
-		}
-	}
 
 	public bool isFriendly = false;
 //	private int _xPosition;

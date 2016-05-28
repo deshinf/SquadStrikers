@@ -14,6 +14,7 @@ public class BoardHandler : MonoBehaviour {
 	public bool canUndoMovement = false;
 	public Coords undoPosition;
 	public int undoSubstanceX;
+	public bool loadedThisScene; //Is this board from a load game (or going to be replaced with such)?
 	public bool suppressInitialization = false;
 	public static BoardHandler GetBoardHandler() {
 		return GameObject.FindGameObjectWithTag ("BoardHandler").GetComponent<BoardHandler> ();
@@ -318,7 +319,6 @@ public class BoardHandler : MonoBehaviour {
 
 	public void Untarget () {
 		foreach (tileState tState in gameBoard) {
-			tState.tile.isHighlighted = false;
 			tState.tile.targeting = Targeting.NoTargeting;
 			if (tState.unit) {
 				tState.unit.targeting = Targeting.NoTargeting;
@@ -329,8 +329,7 @@ public class BoardHandler : MonoBehaviour {
 
 	public void KeepSelectedStill() {
 		Assert.IsTrue(is_selected);
-		((PCHandler)getTileState (selected).unit).canMove = false;
-		gameState = GameStates.ActionMode;
+		MoveSelectedTo (selected);
 	}
 
 	public void MoveSelectedTo(Tile tile) {
@@ -486,7 +485,7 @@ public class BoardHandler : MonoBehaviour {
 					remainingMove = remainingMove - tState.tile.movementCost;
 				if (remainingMove > -1 && !tState.unit) { //Here it would be possible to move to the square
 					if (!haveDoneThis.Contains (tState.tile)) {
-						tState.tile.isHighlighted = true;
+						tState.tile.targeting = Targeting.MovementTargeting;
 						//Debug.Log ("Highlighting at " + current.ToString ());
 						haveDoneThis.Add (tState.tile);
 					}
@@ -570,11 +569,12 @@ public class BoardHandler : MonoBehaviour {
 				}
 			}
 			Randomize ();
-			if (!isTraversable ()) {
+			if (!isTraversable () && !loadedThisScene) {
 				GameObject.FindGameObjectWithTag ("PlayerTeam").GetComponent<PlayerTeamScript> ().depth -= 1;
 				SceneManager.LoadScene ("MainScene");
 				Debug.Log ("Could not traverse level.");
 			}
+			GameObject.FindGameObjectWithTag ("IOHandler").GetComponent<IOScript> ().needToSave = 6;
 		}
 	}
 
@@ -677,7 +677,7 @@ public class BoardHandler : MonoBehaviour {
 		if (GameObject.FindGameObjectsWithTag ("PlayerTeam").Count() == 0) {
 			GameObject.Instantiate (defaultPlayerTeam);
 		}
-		//Default constructor
+		loadedThisScene = (GameObject.FindGameObjectWithTag ("IOHandler").GetComponent<IOScript> ().needToLoad > 0);
 		Init (defaultMapHeight, defaultMapWidth);
 	}
 
@@ -1362,11 +1362,11 @@ public class BoardHandler : MonoBehaviour {
 	public float minEnemyDensity (int depth) {
 		//Debug.Log ("Depth " + depth.ToString ());
 		//return 0f;
-		return 1f - Mathf.Pow (0.96f, (float)depth);
+		return 1f - Mathf.Pow (0.99f, (float)depth+3);
 	}
 	public float maxEnemyDensity (int depth) {
 		//return 0f;
-		return 1f - Mathf.Pow (0.92f, (float)depth);
+		return 1f - Mathf.Pow (0.99f, (float)depth+5);
 	}
 	public GameObject enemyToSpawn (int depth) {
 		float[] probabilities = new float[spawnableEnemies.Length];
@@ -1393,12 +1393,16 @@ public class BoardHandler : MonoBehaviour {
 		return 1f - Mathf.Pow (0.995f, (float)(depth+3));
 	}
 	public float maxItemDensity (int depth) {
-		return 1f - Mathf.Pow (0.99f, (float)(depth+2));
+		return 1f - Mathf.Pow (0.995f, (float)(depth+7));
 	}
 	public GameObject itemToSpawn (int depth) {
 		float[] probabilities = new float[spawnableItems.Length];
 		for (int i = 0; i < spawnableItems.Length; i++) {
-			probabilities [i] = itemRarity [i] * Mathf.Exp (-Mathf.Abs (itemStandardDepth [i] / depth * itemSpawnDepthTolerance));
+			if (itemStandardDepth [i] > depth) {
+				probabilities [i] = itemRarity [i] * Mathf.Exp (-Mathf.Pow (itemStandardDepth [i] / depth,2f) * itemSpawnDepthTolerance);
+			} else {
+				probabilities [i] = itemRarity [i] * Mathf.Exp (-Mathf.Abs (itemStandardDepth [i] / depth) * itemSpawnDepthTolerance);
+			}
 		}
 		float totalProbabilities = probabilities.Sum ();
 		float roll = Random.value;
@@ -1504,11 +1508,16 @@ public class BoardHandler : MonoBehaviour {
 
 	public GameObject Target(int range, bool cardinal, bool includeSelf, bool includeFriendlies, bool includeHostiles, bool includeFloors, bool includeWalls, bool penetratingUnits, bool penetratingWalls, Targeting type, Targeting invalidType, bool allowsDiagonals, Coords startPoint, int minimumRange = 0) {
 		Untarget ();
+		GameObject defaultTarget;
 		if (cardinal) {
-			return CardinalTarget (range, includeSelf, includeFriendlies, includeHostiles, includeFloors, includeWalls, penetratingUnits, penetratingWalls, type, invalidType, startPoint, minimumRange);
+			defaultTarget = CardinalTarget (range, includeSelf, includeFriendlies, includeHostiles, includeFloors, includeWalls, penetratingUnits, penetratingWalls, type, invalidType, startPoint, minimumRange);
 		} else {
-			return NonCardinalTarget (range, includeSelf, includeFriendlies, includeHostiles, includeFloors, includeWalls, penetratingUnits, penetratingWalls, type, invalidType, allowsDiagonals, startPoint, minimumRange);
+			defaultTarget = NonCardinalTarget (range, includeSelf, includeFriendlies, includeHostiles, includeFloors, includeWalls, penetratingUnits, penetratingWalls, type, invalidType, allowsDiagonals, startPoint, minimumRange);
 		}
+		if (defaultTarget == null) {
+			GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("No targets found");
+		}
+		return defaultTarget;
 	}
 
 	private GameObject CardinalTarget (int range, bool includeSelf, bool includeFriendlies, bool includeHostiles, bool includeFloors, bool includeWalls, bool penetratingUnits, bool penetratingWalls, Targeting type, Targeting invalidType, Coords startPoint, int minimumRange) {
@@ -1545,7 +1554,9 @@ public class BoardHandler : MonoBehaviour {
 							defaultTarget = getTileState (currentTarget).tile.gameObject;
 						}
 					} else if (inBounds (currentTarget)) {
-						getTileState (currentTarget).tile.GetComponent<Tile> ().targeting = invalidType;
+						if (!getTileState (currentTarget).tile.blocksLineOfFire) {
+							getTileState (currentTarget).tile.GetComponent<Tile> ().targeting = invalidType;
+						}
 					}
 					if (!inBounds (currentTarget) || (getTileState (currentTarget).unit && !penetratingUnits) || (getTileState (currentTarget).tile.blocksLineOfFire && !penetratingWalls)) {
 						break;
@@ -1573,12 +1584,15 @@ public class BoardHandler : MonoBehaviour {
 			}
 		}
 		int crossRange;
+		Debug.Log ("Range = " + range);
 		for (int i = -range; i <= range; i++) {
 			Debug.Log ("i = " + i);
 			crossRange = allowsDiagonals ? range : range - Math.Abs (i);
+			Debug.Log ("Cross Range = " + crossRange);
 			for (int j = -crossRange; j <= crossRange; j++) {
+				Debug.Log ("(" + i + "," + j + ")");
 				if (i != 0 || j != 0) {
-					if (i + j >= minimumRange) {
+					if (Math.Abs(i) + Math.Abs(j) >= minimumRange) {
 						bool unblocked = true;
 						foreach (Coords blocking in interveningSquares(new Coords(i,j))) {
 							if (!inBounds (blocking + startPoint) || (getTileState (blocking + startPoint).unit && !penetratingUnits) || (getTileState (blocking + startPoint).tile.blocksLineOfFire && !penetratingWalls)) {
@@ -1603,7 +1617,9 @@ public class BoardHandler : MonoBehaviour {
 									defaultTarget = getTileState (currentTarget).tile.gameObject;
 								}			
 							} else if (inBounds (currentTarget)) {
-								getTileState (currentTarget).tile.GetComponent<Tile> ().targeting = invalidType;
+								if (!getTileState (currentTarget).tile.blocksLineOfFire) {
+									getTileState (currentTarget).tile.GetComponent<Tile> ().targeting = invalidType;
+								}
 							}
 						}
 					}
@@ -1628,11 +1644,14 @@ public class BoardHandler : MonoBehaviour {
 			c.y = -c.y;
 		}
 
+		//Debug.Log ("INTERVENING:" + c.ToString());
 		for (int i = 0; i <= c.x; i++) {
 			for (int j = 0; j <= c.y; j++) {
 				if (!(i == c.x && j == c.y) && !(i==0 && j == 0)) {
-					if (Mathf.Atan2 (((float)i) - 0.5f, ((float)j) + 0.5f) > Mathf.Atan2 ((float)c.x, (float)c.y) - 2 * Mathf.Epsilon
-					   && Mathf.Atan2 (((float)i) + 0.5f, ((float)j) - 0.5f) < Mathf.Atan2 ((float)c.x, (float)c.y) + 2 * Mathf.Epsilon) {
+					//Debug.Log ("Checking: (" + i + "," + j + ")");
+					//Debug.Log (Mathf.Atan2 (((float)j) + 0.5f, ((float)i) - 0.5f).ToString() + ", " + Mathf.Atan2 ((float)c.y, (float)c.x) + ", " + Mathf.Atan2 (((float)j) - 0.5f, ((float)i) + 0.5f));
+					if (Mathf.Atan2 (((float)j) + 0.5f,((float)i) - 0.5f) > Mathf.Atan2 ((float)c.y,(float)c.x) - 0.0001 //Note: Even 10,000*Epsilon didn't worked, so I used this instead.
+						&& Mathf.Atan2 (((float)j) - 0.5f,((float)i) + 0.5f) < Mathf.Atan2 ((float)c.y, (float)c.x) + 0.0001) {
 						flippedOutput.Add (new Coords (i, j));
 					}
 				}
@@ -1641,6 +1660,9 @@ public class BoardHandler : MonoBehaviour {
 		foreach (Coords flippedCoord in flippedOutput) {
 			output.Add(new Coords(flippedCoord.x * reversedX, flippedCoord.y * reversedY));
 		}
+		//foreach (Coords inter in output) {
+		//	Debug.Log (inter.ToString ());
+		//}
 		return output;
 	}
 
@@ -1751,6 +1773,7 @@ public class BoardHandler : MonoBehaviour {
 			bh.gameBoard = new tileState[mapWidth, mapHeight];
 			bh.suppressInitialization = true;
 			bh.needToRefreshPlayerTeam = false;
+			bh.loadedThisScene = true;
 
 			for (int i = 0; i < mapWidth; i++) {
 				for (int j = 0; j < mapHeight; j++) {

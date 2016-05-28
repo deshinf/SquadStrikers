@@ -22,18 +22,19 @@ public class ActionHandler : MonoBehaviour {
 		//HashSet<Unit> targets;
 		//Item i;
 		string actionName = action.actionName;
+		bool invalidAction = false;
 		Assert.IsTrue (boardHandler.gameState == BoardHandler.GameStates.ActionMode);
 		switch (actionName) { //Targeting
 		case "Cancel":
 		case "Do Nothing":
 		case "Deadeye":
 		case "Activate Ancient Magic":
-		case"Pick Up Item":
+		case "Pick up Item":
 		case "Drop Item":
 		case "All Out Defense":
 		case "Undo Movement":
 		case "Exit Level":
-			defaultTarget = boardHandler.Target (0, false, true, false, false, false, false, false, false, Targeting.FriendlyTargeting, Targeting.InactiveFriendlyTargeting, false);
+			defaultTarget = boardHandler.Target (0, false,true, false, false, false, false, false, false, Targeting.FriendlyTargeting, Targeting.InactiveFriendlyTargeting, false);
 			break;
 		case "Sword":
 			defaultTarget = boardHandler.Target(1,false,false,false,true,false,false,true,true,Targeting.HostileTargeting,Targeting.InactiveHostileTargeting,actor.hasAbility (PCHandler.Ability.SwordMastery));
@@ -50,12 +51,13 @@ public class ActionHandler : MonoBehaviour {
 			defaultTarget = boardHandler.Target (1, false, false, false, true,false,false, true, true, Targeting.HostileTargeting, Targeting.InactiveHostileTargeting,false);
 			break;
 		case "Bow":
-			defaultTarget = boardHandler.Target(3,false,false,false,true,false,false,false,false, Targeting.HostileTargeting, Targeting.InactiveHostileTargeting,false);
+			defaultTarget = boardHandler.Target(3,false,false,false,true,false,false,actor.hasAbility(PCHandler.Ability.BowMastery),false, Targeting.HostileTargeting, Targeting.InactiveHostileTargeting,false,2);
 			break;
 		case "Mystic Blast":
 		case "Greater Mystic Blast":
 			if (actor.currentEnergy < actor.spellCost (action.actionName)) {
 				GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("Not enough energy.");
+				invalidAction = true;
 				break;
 			}
 			defaultTarget = boardHandler.Target (actor.spellRange (action.actionName), true, false, false, true,false,false,actor.hasAbility (PCHandler.Ability.ArcingMysticBlast), false, Targeting.HostileTargeting, Targeting.InactiveHostileTargeting,false);
@@ -63,6 +65,7 @@ public class ActionHandler : MonoBehaviour {
 		case "Explosion":
 			if (boardHandler.selectedUnit ().currentEnergy < actor.spellCost (action.actionName)) {
 				GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("Not enough energy.");
+				invalidAction = true;
 				break;
 			}
 			defaultTarget = boardHandler.Target (actor.spellRadius (action.actionName), false, true, true, true, true, false, true, false, Targeting.HostileTargeting, Targeting.InactiveHostileTargeting, false);
@@ -72,6 +75,7 @@ public class ActionHandler : MonoBehaviour {
 		case "Full Restore":
 			if (boardHandler.selectedUnit ().currentEnergy < actor.spellCost (action.actionName)) {
 				GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("Not enough energy.");
+				invalidAction = true;
 				break;
 			}
 			defaultTarget = boardHandler.Target (1, true, false, true, false,false,false, false, false, Targeting.FriendlyTargeting, Targeting.InactiveFriendlyTargeting, false);
@@ -79,6 +83,7 @@ public class ActionHandler : MonoBehaviour {
 		case "Discharge Ancient Magic":
 			if (actor.ancientMagic == null) {
 				GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("No ancient magic active.");
+				invalidAction = true;
 				break;
 			} else {
 				defaultTarget = boardHandler.Target (0, false, true, false, false, false, false, false, false, Targeting.FriendlyTargeting, Targeting.InactiveFriendlyTargeting, false);
@@ -92,16 +97,17 @@ public class ActionHandler : MonoBehaviour {
 			break;
 		default:
 			GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("Invalid Action: " + actionName + ".");
+			invalidAction = true;
 			break;
 		}
-		if (defaultTarget != null) {
-			GameObject.FindGameObjectWithTag ("ActionBar").GetComponent<ActionBar> ().UnselectAll ();
-			currentAction = action;
-			return true;
-		} else {
+		if (invalidAction) {
 			GameObject.FindGameObjectWithTag ("ActionBar").GetComponent<ActionBar> ().SelectDoNothing ();
 			GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("Action cannot be preformed: " + actionName + ". Try another action.");
 			return false;
+		} else {
+			GameObject.FindGameObjectWithTag ("ActionBar").GetComponent<ActionBar> ().UnselectAll ();
+			currentAction = action;
+			return true;
 		}
 	}
 
@@ -193,11 +199,19 @@ public class ActionHandler : MonoBehaviour {
 		if (target == null) {
 			target = defaultTarget;
 		}
+		if (target == null) {
+			GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().WarningLog ("Could not autotarget as no targets found.");
+			return;
+		}
 		Assert.IsNotNull (target);
 		PCHandler actor = boardHandler.selectedUnit();
 		int initialHP;
 		Item item;
 		switch (currentAction.actionName) {
+		case "Cancel":
+			GameObject.FindGameObjectWithTag ("StatsBar").GetComponent<StatsBar> ().displayStats (actor);
+			GameObject.FindGameObjectWithTag ("ActionBar").GetComponent<ActionBar> ().Fill ();
+			break;
 		case "Bow":
 		case "Sword":
 			TriggerAttack ((Weapon)currentAction.attachedItem, target.GetComponent<Enemy> (), true);
@@ -325,7 +339,6 @@ public class ActionHandler : MonoBehaviour {
 			((AncientMagic)currentAction.attachedItem).isActive = true;
 			GameObject.FindGameObjectWithTag ("StatsBar").GetComponent<StatsBar> ().displayStats (actor);
 			GameObject.FindGameObjectWithTag ("MessageBox").GetComponentInChildren<MessageBox> ().Log (currentAction.attachedItem.itemName + " activated.");
-			PerformAction (new Action ("Cancel", "", null),null);
 			endActionPhase();
 			break;
 		case "Pick up Item":
@@ -396,7 +409,7 @@ public class ActionHandler : MonoBehaviour {
 				break;
 			}
 		default:
-			throw new System.Exception ("Invalid Ability");
+			throw new System.Exception ("Invalid Action : " +  currentAction.actionName);
 		}
 		boardHandler.canUndoMovement = false;
 	}
@@ -424,10 +437,10 @@ public class ActionHandler : MonoBehaviour {
 		bool hit = false;
 		int baseDamage = attacker.damage + weapon.damage;
 		int hitChance = attacker.attack + weapon.attack - target.dodge;
-		if (weapon.itemClass == "Bow" && attacker.hasAbility(PCHandler.Ability.BowMastery)) {
-			baseDamage += attacker.bowMasteryBonusDamage;
-			hitChance += attacker.bowMasteryBonusAttack;
-		}
+//		if (weapon.itemClass == "Bow" && attacker.hasAbility(PCHandler.Ability.BowMastery)) {
+//			baseDamage += attacker.bowMasteryBonusDamage;
+//			hitChance += attacker.bowMasteryBonusAttack;
+//		}
 		if (attacker.hasAbility(PCHandler.Ability.PowerBlow) && attacker.powerBlowActive) {
 			baseDamage = baseDamage * 2;
 		}

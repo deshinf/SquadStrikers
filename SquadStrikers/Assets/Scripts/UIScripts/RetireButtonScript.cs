@@ -1,9 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 
-public class QuitButtonScript : MonoBehaviour {
+public class RetireButtonScript : MonoBehaviour {
 
 	// Use this for initialization
 	Button myButton;
@@ -24,7 +23,6 @@ public class QuitButtonScript : MonoBehaviour {
 	}
 
 	void quitGame() {
-		//GameObject.FindGameObjectWithTag ("IOHandler").GetComponent<IOScript> ().SaveGame ();
-		Application.Quit ();
+		UnityEngine.SceneManagement.SceneManager.LoadScene ("DefeatScreen");
 	}
 }

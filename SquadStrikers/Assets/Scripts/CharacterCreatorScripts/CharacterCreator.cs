@@ -40,7 +40,7 @@ public class CharacterCreator : MonoBehaviour {
 
 	public string GivenName() {
 		string result = gameObject.transform.Find("NamePanel/InputField/Text").GetComponent<Text>().text;
-		Debug.Log (result);
+		//Debug.Log (result);
 		return result;
 	}
 	// Update is called once per frame

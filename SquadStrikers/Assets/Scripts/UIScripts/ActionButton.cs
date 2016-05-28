@@ -88,11 +88,14 @@ public class ActionButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
 		if (hasHotkey) {
 			List<char> numbers = new List<char> (){ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
 			if (numbers.Contains (hotkey)) {
-				//if (Input.GetKeyDown ((KeyCode) System.Enum.Parse(typeof(KeyCode),"Keypad" + hotkey.ToString()))) {
-				if (Input.GetKeyDown ((KeyCode)System.Enum.Parse (typeof(KeyCode), "Alpha" + hotkey.ToString ()))) {
+				if (Input.GetKeyDown ((KeyCode)System.Enum.Parse (typeof(KeyCode), "Keypad" + hotkey.ToString ())) ||
+				    Input.GetKeyDown ((KeyCode)System.Enum.Parse (typeof(KeyCode), "Alpha" + hotkey.ToString ()))) {
 					respond ();
 				}
 			} else if (Input.GetKeyDown ((KeyCode)System.Enum.Parse (typeof(KeyCode), hotkey.ToString ().ToUpper ()))) {
+				respond ();
+			}
+			if (isSelected && (Input.GetKeyDown (KeyCode.Return) || Input.GetKeyDown (KeyCode.KeypadEnter))) {
 				respond ();
 			}
 		}

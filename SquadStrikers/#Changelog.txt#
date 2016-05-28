@@ -1,4 +1,4 @@
-﻿0.1.2:
+0.1.2:
 
 Changed sizes of UI elements to better work with varied resolutions
 Cleaned up display of Message Log at bottom of screen (removed jerkiness).
@@ -48,50 +48,25 @@ Now possible to stand on level exit. Leaving level is an action.
 UI:
 Added support for undoing moves. Cannot undo once an action is performed, even an instant one or a do nothing.
 As with units, right clicking on items now brings up a description on the left.
-Added hotkeys to end turn: Enter, Space
+Added hotkeys to end turn: Enter, Space.
 
 Bugfixes:
 Fixed bug where whether you could pick up an item or leave the level was based on where you were before moving, rather than after.
 Fixed a bug where if a character died, you save and then load, they appear at (1,1) but otherwise cannot be interacted with.
 Fixed a bug where if a character acted, then the game was saved and loaded, they appeared to have not acted but still cannot act again.
 
-0.2.0:
+0.1.7
 
-NOTE: SAVES FROM OLDER VERSIONS INCOMPATIBLE.
-
-Gameplay:
-Changed Bow Mastery to allow arcing shots over people's heads. It might be a bit underpowered but it was more interesting than the placeholder +Acc,+Dmg I had because I couldn't think of anything.
-Significantly reduced probability of very out of depth item drops.
-Dreamatically reduced the amount that the spawn rate of enemies and items depends on depth, as well as on rng.
-
-UI: 
-Added ability to undo movement.
-Added faint highlighting of tiles that are in the correct range for an ability but are not valid targets due to not having the right type of thing on them (ex: a Unit).
-Added support for abilities targetted to floors or walls.
-All abilities now targeted. Abilities that don't need a target target the self. As such, all abilites take two button presses, rather than some taking 2 and some 1.
-Now allows entering targeting mode when there are no valid targets, rather than immediately cancelling. Should be less jarring and along with the faint highlighting above, allow for easier rangefinding.
-When targeting an ability, all other abilities still visible and can be selected rather than having to click Cancel first.
-Pressing an ability hotkey, pressing enter, or clicking on that ability's button when the ability is selected now automatically selects a default target.
-Added hotkeys to select a unit to move. Pressing it twice stays still.
-Selecting a unit who has already moved now gives a warning.
-The hotkey Spacebar now ends your turn.
-Cleaned up Pause Menu
-On character creator screen, added options to delete a save game and to save your starting configuration as your default.
-
-Bugfixes:
-Fixed bug with bow targeting resulting from rounding errors in floating point calculations by increasing rounding tolerances from 2*Mathf.Epsilon to 0.0001.
-Fixed bug where you cannot move to a tile with an item as the item hitboxes added in 0.1.6 blocked the tile hitboxes.
-Fixed bug where Numpad didn't work for numerical hotkeys, no matter the state of Num Lock.
-Fixed a bug where saving and loading would reset ancient magics to inactive.
-Fixed a bug where one-use instants (ex: Discharging an Ancient Magic) didn't get removed from the action list on use.
-Fixed a bug where all Ancient Magics had been set to 0 max charges.
-Fixed a bug where the game didn't save on the first turn of each level, allowing one to easily save scum level randomization from within the game.
-
-Backend:
-Movement now resolved in the same way as action targeting.
+UI:
+Added tiles that could be targetted if there was a valid target on them getting highlighted mildly.
+Added targetting support for tile targettable abilities.
+Fixed bug in bow targetting resulting from rounding errors with floats by adding or subtracting 0.0001 to some calculations. (I had been adding Mathf.Epsilon, but the rounding errors were considerably larger than this.)
+Removed "Cannot perform this action" message and action cancelling when no valid targets found. Instead, a warning comes up but the ability is still selected. However, it cannot be used due to not being able to pick a target. This combined with the highlighted tiles should allow for easier rangefinding.
 
 Known issues:
-Arrow key based targeting should be possible to allow complete keyboard play.
-Need ability to scroll when there are too many actions or save files available.
-Character creation screen needs tooltips
+Mouse over enemy/item to see on left hand panel. <- Not sure if actually a good idea.
+InactiveTargeting modes currently do nothing.
+Highlighting for tiles should be done via colour filter, not diferent sprite.
+Need ability to scroll when there are too many actions
+Border highlighting for selection, rather than colour tweaking.
 Careful Strike Bonus does not carry over between levels.

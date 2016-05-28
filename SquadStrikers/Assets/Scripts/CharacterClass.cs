@@ -65,7 +65,7 @@ public class CharacterClass{
 					}
 				}
 				PCHandler.AbilityGrid output = new PCHandler.AbilityGrid (transitions);
-				Debug.Log (output.NumberOfAccessibleNodes ());
+//				Debug.Log (output.NumberOfAccessibleNodes ());
 				if (output.NumberOfAccessibleNodes() >= minSizeOfAbilityGrid) {
 					return new PCHandler.AbilityGrid(transitions);
 				}
