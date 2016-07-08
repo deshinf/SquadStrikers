@@ -5,6 +5,7 @@ public abstract class Item : MonoBehaviour {
 
 	public string itemName;
 	public Sprite icon;
+
 	[SerializeField] private PCHandler _owner;
 	[SerializeField] private string _description; //Determines what appears on the side when item is used.
 	public virtual string description {get {return _description;} set {_description = value; }}
@@ -29,6 +30,11 @@ public abstract class Item : MonoBehaviour {
 			}
 		}
 	}
+
+	public int value; //Used for determining how many items to spawn on each level.
+	public bool legendary; //Legendary items only spawn in special circumstances.
+	public float naturalDepth; //The most common depth for this to spawn at.
+	public float frequency; //This determines how likely the item is to drop.
 
 	public void OnMouseDown() {
 		BoardHandler bh = BoardHandler.GetBoardHandler ();
@@ -67,12 +73,15 @@ public abstract class Item : MonoBehaviour {
 	[System.Serializable]
 	public abstract class ItemSave {
 		public abstract GameObject ToGameObject ();
+		public string itemName;
 
 		public static ItemSave CreateFromItem(Item i) {
 			if (i is Weapon) {
 				return new Weapon.WeaponSave ((Weapon)i);
 			} else if (i is AncientMagic) {
 				return new AncientMagic.AncientMagicSave ((AncientMagic)i);
+			} else if (i is KeyItem) {
+				return new KeyItem.KeyItemSave ((KeyItem)i);
 			} else {
 				throw new UnityException ("Don't know how to load this item type:" + i.itemName);
 			}

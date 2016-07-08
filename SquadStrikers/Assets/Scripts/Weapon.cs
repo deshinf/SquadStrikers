@@ -86,7 +86,6 @@ public class Weapon : ActionItem {
 
 	[System.Serializable]
 	public class WeaponSave : ActionItemSave {
-		public string itemName;
 		public int _charges;
 		//Owner takes possession of this instead.
 //		public int _owner;

@@ -44,7 +44,6 @@ public class AncientMagic : ActionItem {
 
 	[System.Serializable]
 	public class AncientMagicSave : ActionItemSave {
-		public string itemName;
 		public int charges;
 		public bool isActive;
 		//Owner takes possession of this instead.

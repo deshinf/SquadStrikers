@@ -90,7 +90,26 @@ Fixed a bug where the game didn't save on the first turn of each level, allowing
 Backend:
 Movement now resolved in the same way as action targeting.
 
+0.2.1:
+
+Gameplay:
+Completely overhauled level generation algorithms to increase level variety and make unreachable points impossible.
+Added some of the backend framework (the level generation related part) for a variety of level objective modes.
+Improved Item spawning algorithms so roughly the same total value of items will always spawn at any given depth.
+Improved Enemy spawning algorithms so roughly the same total difficulty of enemies will always spawn at any given depth.
+
+Bugfixes:
+Level generation now creates the entire level before instantiating any of it, so you should no longer see the flicker of levels being created and destroyed when invalid.
+
+Backend:
+Moved all of the level generation code to a separate class, rather than being in the Board Handler class.
+Additionally, cleaned up some cruft in the Board Handler class. These two combined to reduce it from well over 2000 lines to 1424.
+
 Known issues:
+The same boss shouldn't spawn more than once.
+Objectives need to actually work.
+Guards should be coded to preferentially spawn in doorways.
+Mage mana regen too high
 Arrow key based targeting should be possible to allow complete keyboard play.
 Need ability to scroll when there are too many actions or save files available.
 Character creation screen needs tooltips

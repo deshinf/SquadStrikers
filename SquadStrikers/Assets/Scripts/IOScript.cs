@@ -235,7 +235,7 @@ public class IOScript : MonoBehaviour {
 		}
 		if (needToSave == 1) {
 			SaveGame ();
-			needToLoad = 0;
+			needToSave = 0;
 		} else if (needToSave > 1) {
 			needToSave -= 1;
 		}

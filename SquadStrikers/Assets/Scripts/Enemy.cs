@@ -12,6 +12,13 @@ public class Enemy : Unit {
 		gameObject.transform.Translate (0f, 0f, -0.1f);
 	}
 
+	public int difficulty; //Used for determining how many enemies to spawn on each level.
+	public int naturalDepth; //The most common depth for this to spawn at.
+	//These determine how likely the enemy is to spawn. Usually, only one will be non-zero.
+	public float frequency; //This determines how likely the enemy is to spawn as a standard enemy.
+	public float bossFrequency; //This determines how likely the enemy is to spawn as a boss.
+	public float optionalBossFrequency; //This determines how likely the enemy is to spawn as an optional boss.
+
 	//Overriding all the properties from Unit to use Serialized Fields so that the Unity Editor can get at them.
 	[SerializeField] int _attack;
 	public override int attack { get { return _attack; } set { _attack = value; } }

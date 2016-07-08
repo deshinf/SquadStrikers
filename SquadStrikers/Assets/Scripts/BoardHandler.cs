@@ -9,6 +9,13 @@ using UnityEngine.SceneManagement;
 
 public class BoardHandler : MonoBehaviour {
 
+
+	public enum LayoutType {Open,Maze,Rooms,Grid,RoomsMaze,RoomsOpen}
+	LayoutType layout; //Basic layout type of the level.
+	float[] layoutParameters; //Parameters used by layout type in creating level. Don't worry about these except when randomizing new levels.
+	public enum ObjectiveType {Sprint,Survive,Boss,Slaughter,OptionalBoss,KeyCollect,TreasureHunt,Buttons}
+	ObjectiveType objective; //Objective to complete the level.
+	int[] objectiveParameters; //Paramters used by the objective, such as the number of turns to survive in a survival objective.
 	//A by-value pair of ints representing a position on the gameBoard in squares.
 	public GameObject defaultPlayerTeam;
 	public bool canUndoMovement = false;
@@ -224,7 +231,40 @@ public class BoardHandler : MonoBehaviour {
 			public Item.ItemSave item;
 			public int substanceX; //score collectibles
 
+			public tileStateSave() {
+				tile = "emptyTile";
+				enemy = null;
+				player = -1;
+				item = null;
+				substanceX = 0;
+			}
+
+			public override string ToString () {
+				string output = "{";
+				output += tile;
+				if (enemy != null) {
+					output += ",";
+					output += enemy._unitName;
+				}
+				if (player != -1) {
+					output += ", Player";
+					output += player.ToString ();
+				}
+				if (item != null) {
+					output += ",";
+					output += item.itemName;
+				}
+				if (substanceX != 0) {
+					output += ", Substance X: ";
+					output += substanceX.ToString ();
+				}
+				return output;
+			}
+
 			public tileStateSave (tileState ts) {
+
+
+
 				if (ts.tile) {
 					this.tile = ts.tile.tileName;
 				} else {
@@ -262,8 +302,11 @@ public class BoardHandler : MonoBehaviour {
 				tileState output = new tileState (null,null);
 				if (this.tile != null) {
 					GameObject newTile;
-					Assert.IsTrue(GameObject.FindGameObjectWithTag("PlayerTeam").GetComponent<Database>().GetTileByName(this.tile, out newTile));
-					output.tile = ((GameObject) Instantiate (newTile, new Vector2 (c.x * tileSize, c.y * tileSize), Quaternion.identity)).GetComponent<Tile>();
+					if (GameObject.FindGameObjectWithTag ("PlayerTeam").GetComponent<Database> ().GetTileByName (this.tile, out newTile)) {
+						output.tile = ((GameObject)Instantiate (newTile, new Vector2 (c.x * tileSize, c.y * tileSize), Quaternion.identity)).GetComponent<Tile> ();
+					} else {
+						throw new UnityException("Tile not in database: " + tile);
+					}
 				} else {
 					throw new UnityException("NO TILE FOUND AT (" + c.x + "," + c.y + ")");
 					//output.tile = null;
@@ -271,16 +314,18 @@ public class BoardHandler : MonoBehaviour {
 				if (this.enemy != null) {
 					output.unit = enemy.ToGameObject (c).GetComponent<Enemy> ();
 				} else if (this.player != -1) {
-					Debug.Log ("Player " + player + "loaded at (" + c.x + "," + c.y + ")");
+					//Debug.Log ("Player " + player + "loaded at (" + c.x + "," + c.y + ")");
 					output.unit = GameObject.FindGameObjectWithTag ("PlayerTeam").GetComponent<PlayerTeamScript> ().getTeamMember (this.player);
 					output.unit.gameObject.transform.position = new Vector3 (c.x * tileSize, c.y * tileSize, -0.1f);
 					((PCHandler)output.unit).canMove = ((PCHandler)output.unit).canMove; //I have no idea why this is neccessary, but it fixes a bug where units display as unfatigued after loading.
-					Debug.Log (output.unit.unitName + " Now at (" + output.unit.gameObject.transform.position.x + "," + output.unit.gameObject.transform.position.y + ")");
+					//Debug.Log (output.unit.unitName + " Now at (" + output.unit.gameObject.transform.position.x + "," + output.unit.gameObject.transform.position.y + ")");
 				} else {
 					output.unit = null;
 				}
 				if (this.item != null) {
+					//Debug.Log (this.item.itemName);
 					output.item = this.item.ToGameObject ().GetComponent<Item> ();
+					output.item.isOnFloor = true;
 					output.item.gameObject.transform.position = new Vector3 (c.x * tileSize, c.y * tileSize, -0.05f);
 				} else {
 					output.item = null;
@@ -311,7 +356,7 @@ public class BoardHandler : MonoBehaviour {
 
 	public void Unselect () {
 		if (is_selected) {
-			Debug.Log ("Here");
+			//Debug.Log ("Here");
 			is_selected = false;
 		}
 		Untarget ();
@@ -345,7 +390,7 @@ public class BoardHandler : MonoBehaviour {
 			undoSubstanceX = 0;
 		} else {
 			undoSubstanceX = getTileState (c).substanceX.amount;
-			Debug.Log ("Substance X amount: " + undoSubstanceX);
+			//Debug.Log ("Substance X amount: " + undoSubstanceX);
 		}
 		undoPosition = selected;
 
@@ -568,84 +613,19 @@ public class BoardHandler : MonoBehaviour {
 					gameBoard [x, y] = tS;
 				}
 			}
-			Randomize ();
-			if (!isTraversable () && !loadedThisScene) {
-				GameObject.FindGameObjectWithTag ("PlayerTeam").GetComponent<PlayerTeamScript> ().depth -= 1;
-				SceneManager.LoadScene ("MainScene");
-				Debug.Log ("Could not traverse level.");
-			}
+//			Randomize ();
+//			if (!isTraversable () && !loadedThisScene) {
+//				GameObject.FindGameObjectWithTag ("PlayerTeam").GetComponent<PlayerTeamScript> ().depth -= 1;
+//				SceneManager.LoadScene ("MainScene");
+//				Debug.Log ("Could not traverse level.");
+//			}
+			GameObject.FindGameObjectWithTag ("PlayerTeam").GetComponent<PlayerTeamScript> ().depth += 6;
+			BoardHandlerSave newLevel = gameObject.GetComponent<BoardGenerator> ().CreateRandomLevel (GameObject.FindGameObjectWithTag ("PlayerTeam").GetComponent<PlayerTeamScript> ().depth);
+			newLevel.ToGameObject ();
+		} else {
+			//Debug.Log ("Telling to Save");
 			GameObject.FindGameObjectWithTag ("IOHandler").GetComponent<IOScript> ().needToSave = 6;
 		}
-	}
-
-	//This is needed for the next method to compute the number of rows that should be used to spawn players.
-	private int IntegerSquareRootRdUp (int x) {
-		double sqrt = System.Math.Sqrt((double) x);
-		if (System.Math.Abs(sqrt - (int) sqrt)<double.Epsilon)
-		{
-			return (int) sqrt;
-		}
-		return ((int) sqrt)+1;
-	}
-
-	//Builds a random map. Currently makes each square a wall completely independently.
-	//TODO: Improve this.
-	//TODO: Make sure level is passible.
-	void Randomize() {
-		int depth = GameObject.FindGameObjectWithTag ("PlayerTeam").GetComponent<PlayerTeamScript> ().depth++;
-		depth += 1;
-		//The amount of space that should be set aside for the PCs to spawn in.
-		int pCSpawnSize = IntegerSquareRootRdUp (PlayerTeamScript.TEAM_SIZE);
-		List<Coords> possibleLocations = new List<Coords>();
-		for (int xCoord = 0; xCoord < mapWidth; xCoord += 1) {
-			for (int yCoord = 0; yCoord < mapHeight; yCoord += 1) {
-				if ((xCoord<mapWidth-2 || yCoord<mapHeight-2)&&(xCoord>pCSpawnSize || yCoord>pCSpawnSize))
-					//If the coordinates are not in the restricted area around either the players or the
-					//end zone, then they are eligable to have something spawned in them.
-					possibleLocations.Add(new Coords {x = xCoord, y = yCoord});
-			}
-		}
-		int numberOfWalls = Random.Range ((int) (possibleLocations.Count * minWallDensity), (int) (possibleLocations.Count * maxWallDensity));
-		for (int i = 0; i < numberOfWalls; i+= 1) {
-			int index = Random.Range (0, possibleLocations.Count);
-			Coords position = possibleLocations [index];
-			possibleLocations.RemoveAt (index);
-			changeTileType (position.x, position.y, wallTile);
-		}
-		int numberOfEnemies = Random.Range ((int) (possibleLocations.Count * minEnemyDensity(depth)), (int) (possibleLocations.Count * maxEnemyDensity(depth)));
-		for (int i = 0; i < numberOfEnemies; i+= 1) {
-			//Debug.Log ("Spawning");
-			int index = Random.Range (0, possibleLocations.Count);
-			Coords position = possibleLocations [index];
-			possibleLocations.RemoveAt (index);
-			Unit newEnemy = ((GameObject) Instantiate (enemyToSpawn(depth), new Vector2 (0f,0f), Quaternion.identity)).GetComponent<Unit>();
-			addNewUnit (position.x, position.y, newEnemy);
-		}
-		int numberOfItems = Random.Range ((int) (possibleLocations.Count * minItemDensity(depth)), (int) (possibleLocations.Count * maxItemDensity(depth)));
-		for (int i = 0; i < numberOfItems; i+= 1) {
-			//Debug.Log ("Spawning");
-			int index = Random.Range (0, possibleLocations.Count);
-			Coords position = possibleLocations [index];
-			possibleLocations.RemoveAt (index);
-			Item newItem = ((GameObject) Instantiate (itemToSpawn(depth), new Vector2 (0f,0f), Quaternion.identity)).GetComponent<Item>();
-			addNewItem (position.x, position.y, newItem);
-		}
-		foreach (int i in splitUpInteger(substanceXtotal(depth),substanceXclumps(depth))) {
-			int index = Random.Range (0, possibleLocations.Count);
-			Coords position = possibleLocations [index];
-			possibleLocations.RemoveAt (index);
-			SubstanceX sX = ((GameObject) Instantiate (substanceX, new Vector2 (position.x * tileSize, position.y * tileSize), Quaternion.identity)).GetComponent<SubstanceX>();
-			sX.amount = i;
-			getTileState (position).substanceX = sX;
-		}
-
-		//Note: Only spawns one team. If multiplayer ever added, this will need to change.
-		PlayerTeamScript playerTeam = GameObject.FindWithTag("PlayerTeam").GetComponent<PlayerTeamScript>();
-		for (int i = 0; i<PlayerTeamScript.TEAM_SIZE; i+=1)
-		{
-			addNewUnit (i/pCSpawnSize, i % pCSpawnSize, playerTeam.getTeamMember(i));
-		}
-		changeTileType (mapWidth - 1, mapHeight - 1, goalTile);
 	}
 
 	//Instantiates GameObject as the tile at coordinates (x,y) and destroys the old tile there if there was one.
@@ -694,147 +674,6 @@ public class BoardHandler : MonoBehaviour {
 			gameState = GameStates.EnemyTurn;
 		}
 	}
-
-//	//Returns false if no targets found, otherwise true.
-//	public bool SwordTargeting () {
-//		gameState = GameStates.TargetMode;
-//		bool output = false;
-//		Coords[] targetableSquares;
-//		if (selectedUnit ().hasAbility (PCHandler.Ability.SwordMastery)) {
-//			targetableSquares = new Coords[] {
-//				selected + Coords.UP,
-//				selected + Coords.DOWN,
-//				selected + Coords.RIGHT,
-//				selected + Coords.LEFT,
-//				selected + Coords.UP + Coords.RIGHT,
-//				selected + Coords.UP + Coords.LEFT,
-//				selected + Coords.DOWN + Coords.RIGHT,
-//				selected + Coords.DOWN + Coords.LEFT,
-//			};
-//		} else {
-//			targetableSquares = new Coords[] {
-//				selected + Coords.UP,
-//				selected + Coords.DOWN,
-//				selected + Coords.RIGHT,
-//				selected + Coords.LEFT
-//			};
-//		}
-//		foreach (Coords c in targetableSquares) {
-//			if (c.x > -1 && c.y > -1 && c.x < mapWidth && c.y < mapHeight) {
-//				if (getTileState (c).unit) {
-//					if (getTileState (c).unit is Enemy) {
-//						getTileState (c).unit.GetComponent<Enemy> ().targeting = Targeting.HostileTargeting;
-//						output = true;
-//					}
-//				}
-//			}
-//		}
-//		return output;
-//	}
-//
-//
-//	//Returns false if no targets found, otherwise true.
-//	public bool MaceTargeting () {
-//		bool output = false;
-//		gameState = GameStates.TargetMode;
-//		Coords[] targetableSquares = new Coords[] {
-//				selected + Coords.UP,
-//				selected + Coords.DOWN,
-//				selected + Coords.RIGHT,
-//				selected + Coords.LEFT
-//			};
-//		foreach (Coords c in targetableSquares) {
-//			if (c.x > -1 && c.y > -1 && c.x < mapWidth && c.y < mapHeight) {
-//				if (getTileState (c).unit) {
-//					if (getTileState (c).unit is Enemy) {
-//						getTileState (c).unit.GetComponent<Enemy> ().targeting = Targeting.HostileTargeting;
-//						output = true;
-//					}
-//				}
-//			}
-//		}
-//		return output;
-//	}
-//
-//	//Returns false if no targets found, otherwise true.
-//	public bool BoardTargeting () {
-//		gameState = GameStates.TargetMode;
-//		bool output = false;
-//		Coords[] targetableSquares = new Coords[] {
-//			selected + Coords.UP,
-//			selected + Coords.DOWN,
-//			selected + Coords.RIGHT,
-//			selected + Coords.LEFT
-//		};
-//		foreach (Coords c in targetableSquares) {
-//			if (c.x > -1 && c.y > -1 && c.x < mapWidth && c.y < mapHeight) {
-//				if (getTileState (c).unit) {
-//					if (getTileState (c).unit is Enemy) {
-//						getTileState (c).unit.GetComponent<Enemy> ().targeting = Targeting.HostileTargeting;
-//						output = true;
-//					}
-//				}
-//			}
-//		}
-//		return output;
-//	}
-//
-//	public bool BowTargeting () {
-//		gameState = GameStates.TargetMode;
-//		bool output = false;
-//		Tuple<Coords,List<Coords>>[] targetableSquaresAndBlockers = new Tuple<Coords,List<Coords>>[] {
-//			new Tuple<Coords, List<Coords>>(selected + Coords.UP + Coords.UP,new List<Coords>{selected + Coords.UP}),
-//			new Tuple<Coords, List<Coords>>(selected + Coords.UP + Coords.UP + Coords.UP,new List<Coords>{selected + Coords.UP, selected + Coords.UP + Coords.UP}),
-//
-//			new Tuple<Coords, List<Coords>>(selected + Coords.DOWN + Coords.DOWN,new List<Coords>{selected + Coords.DOWN}),
-//			new Tuple<Coords, List<Coords>>(selected + Coords.DOWN + Coords.DOWN + Coords.DOWN,new List<Coords>{selected + Coords.DOWN, selected + Coords.DOWN + Coords.DOWN}),
-//
-//			new Tuple<Coords, List<Coords>>(selected + Coords.LEFT + Coords.LEFT,new List<Coords>{selected + Coords.LEFT}),
-//			new Tuple<Coords, List<Coords>>(selected + Coords.LEFT + Coords.LEFT + Coords.LEFT,new List<Coords>{selected + Coords.LEFT, selected + Coords.LEFT + Coords.LEFT}),
-//
-//			new Tuple<Coords, List<Coords>>(selected + Coords.RIGHT + Coords.RIGHT,new List<Coords>{selected + Coords.RIGHT}),
-//			new Tuple<Coords, List<Coords>>(selected + Coords.RIGHT + Coords.RIGHT + Coords.RIGHT,new List<Coords>{selected + Coords.RIGHT, selected + Coords.RIGHT + Coords.RIGHT}),
-//
-//			new Tuple<Coords, List<Coords>>(selected + Coords.UP + Coords.RIGHT,new List<Coords>{selected + Coords.UP, selected + Coords.RIGHT}),
-//			new Tuple<Coords, List<Coords>>(selected + Coords.UP + Coords.LEFT,new List<Coords>{selected + Coords.UP, selected + Coords.LEFT}),
-//			new Tuple<Coords, List<Coords>>(selected + Coords.DOWN + Coords.RIGHT,new List<Coords>{selected + Coords.DOWN, selected + Coords.RIGHT}),
-//			new Tuple<Coords, List<Coords>>(selected + Coords.DOWN + Coords.LEFT,new List<Coords>{selected + Coords.DOWN, selected + Coords.LEFT}),
-//
-//			new Tuple<Coords, List<Coords>>(selected + Coords.UP + Coords.UP + Coords.RIGHT,new List<Coords>{selected + Coords.UP, selected + Coords.UP + Coords.RIGHT}),
-//			new Tuple<Coords, List<Coords>>(selected + Coords.UP + Coords.RIGHT + Coords.RIGHT,new List<Coords>{selected + Coords.RIGHT, selected + Coords.UP +Coords.RIGHT}),
-//
-//
-//			new Tuple<Coords, List<Coords>>(selected + Coords.UP + Coords.UP + Coords.LEFT,new List<Coords>{selected + Coords.UP, selected + Coords.UP + Coords.LEFT}),
-//			new Tuple<Coords, List<Coords>>(selected + Coords.UP + Coords.LEFT + Coords.LEFT,new List<Coords>{selected + Coords.LEFT, selected + Coords.UP +Coords.LEFT}),
-//
-//
-//			new Tuple<Coords, List<Coords>>(selected + Coords.DOWN + Coords.DOWN + Coords.LEFT,new List<Coords>{selected + Coords.DOWN, selected + Coords.DOWN + Coords.LEFT}),
-//			new Tuple<Coords, List<Coords>>(selected + Coords.DOWN + Coords.LEFT + Coords.LEFT,new List<Coords>{selected + Coords.LEFT, selected + Coords.DOWN +Coords.LEFT}),
-//
-//
-//			new Tuple<Coords, List<Coords>>(selected + Coords.DOWN + Coords.DOWN + Coords.RIGHT,new List<Coords>{selected + Coords.DOWN, selected + Coords.DOWN + Coords.RIGHT}),
-//			new Tuple<Coords, List<Coords>>(selected + Coords.DOWN + Coords.RIGHT + Coords.RIGHT,new List<Coords>{selected + Coords.RIGHT, selected + Coords.DOWN +Coords.RIGHT}),
-//
-//			};
-//		foreach (Tuple<Coords,List<Coords>> t in targetableSquaresAndBlockers) {
-//			Coords c = t.Item1;
-//			if (c.x > -1 && c.y > -1 && c.x < mapWidth && c.y < mapHeight) {
-//				if (getTileState (c).unit) {
-//					if (getTileState (c).unit is Enemy) {
-//						bool canAttack = true;
-//						foreach (Coords blocker in t.Item2) {
-//							if (getTileState (blocker).unit || getTileState (blocker).tile.blocksLineOfFire) canAttack = false;
-//						}
-//						if (canAttack) {
-//							getTileState (c).unit.GetComponent<Enemy> ().targeting = Targeting.HostileTargeting;
-//							output = true;
-//						}
-//					}
-//				}
-//			}
-//		}
-//		return output;
-//	}
 
 	public bool isImpassibleOrOutOfBounds (Coords c) {
 		return (!inBounds (c) || !getTileState (c).tile.isPassable);
@@ -918,55 +757,6 @@ public class BoardHandler : MonoBehaviour {
 		return false;
 	}
 
-//	//Returns false if no targets found, otherwise true.
-//	public bool SpearTargeting () {
-//		gameState = GameStates.TargetMode;
-//		bool output = false;
-//		foreach (Coords direction in new Coords[] {Coords.DOWN, Coords.LEFT, Coords.RIGHT, Coords.UP}) {
-//			Coords c = selected + direction;
-//			if (inBounds (c) && getTileState(c).tile.isPassable) {
-//				if (getTileState (c).unit) {
-//					if (getTileState (c).unit is Enemy) {
-//						getTileState (c).unit.GetComponent<Enemy> ().targeting = Targeting.HostileTargeting;
-//						output = true;
-//					}
-//				}
-//				if ((selectedUnit().hasAbility(PCHandler.Ability.SpearMastery) || !getTileState(c).unit) && inBounds (c + direction) && !getTileState (c).tile.blocksLineOfFire) {
-//					c = selected + direction + direction;
-//					if (getTileState (c).unit) {
-//						if (getTileState (c).unit is Enemy) {
-//							getTileState (c).unit.GetComponent<Enemy> ().targeting = Targeting.HostileTargeting;
-//							output = true;
-//						}
-//					}
-//				}
-//			}
-//		}
-//		return output;
-//	}
-//
-//	//Returns false if no targets found, otherwise true.
-//	public bool CardinalAttackTargeting (int range, bool ignoresUnitBlcoking) {
-//		gameState = GameStates.TargetMode;
-//		bool output = false;
-//		Coords currentTarget;
-//		foreach (Coords direction in new Coords[] {Coords.DOWN, Coords.LEFT, Coords.RIGHT, Coords.UP}) {
-//			currentTarget = selected;
-//			for (int i = 1; i <= range; i++) {
-//				currentTarget = currentTarget + direction;
-//				if (inBounds (currentTarget) && getTileState (currentTarget).unit && getTileState (currentTarget).unit is Enemy) {
-//					getTileState (currentTarget).unit.GetComponent<Enemy> ().targeting = Targeting.HostileTargeting;
-//					output = true;
-//					break;
-//				} else if (!(inBounds (currentTarget) && !getTileState (currentTarget).tile.blocksLineOfFire && (!getTileState (currentTarget).unit || ignoresUnitBlcoking))) {
-//					break;
-//				}
-//			}
-//		}
-//		return output;
-//	}
-
-	//Returns false if no targets found, otherwise true.
 	public bool canAttackPlayerWithCardinalAttack (out PCHandler target, Coords amHere, int range, bool ignoresUnitBlcoking) {
 		Coords currentTarget;
 		target = null;
@@ -985,51 +775,6 @@ public class BoardHandler : MonoBehaviour {
 		return false;
 	}
 
-//	//Returns false if no targets found, otherwise true.
-//	public bool NonpenetratingCardinalBuffTargeting (int range) {
-//		gameState = GameStates.TargetMode;
-//		bool output = false;
-//		Coords currentTarget;
-//		foreach (Coords direction in new Coords[] {Coords.DOWN, Coords.LEFT, Coords.RIGHT, Coords.UP}) {
-//			currentTarget = selected;
-//			for (int i = 1; i <= range; i++) {
-//				currentTarget = currentTarget + direction;
-//				if (inBounds (currentTarget) && getTileState (currentTarget).unit && getTileState (currentTarget).unit.isFriendly) {
-//					getTileState (currentTarget).unit.GetComponent<Unit> ().targeting = Targeting.FriendlyTargeting;
-//					output = true;
-//					break;
-//				} else if (!(inBounds (currentTarget) && !getTileState (currentTarget).tile.blocksLineOfFire && !getTileState (currentTarget).unit)) {
-//					break;
-//				}
-//			}
-//		}
-//		return output;
-//	}
-//
-//	//Returns false if no targets found, otherwise true.
-//	public bool NonpenetratingCardinalMixedTargeting (int range) {
-//		gameState = GameStates.TargetMode;
-//		bool output = false;
-//		Coords currentTarget;
-//		foreach (Coords direction in new Coords[] {Coords.DOWN, Coords.LEFT, Coords.RIGHT, Coords.UP}) {
-//			currentTarget = selected;
-//			for (int i = 1; i <= range; i++) {
-//				currentTarget = currentTarget + direction;
-//				if (inBounds (currentTarget) && getTileState (currentTarget).unit) {
-//					if (getTileState (currentTarget).unit.isFriendly) {
-//						getTileState (currentTarget).unit.GetComponent<Unit> ().targeting = Targeting.FriendlyTargeting;
-//					} else {
-//						getTileState (currentTarget).unit.GetComponent<Unit> ().targeting = Targeting.HostileTargeting;
-//					}
-//					output = true;
-//					break;
-//				} else if (!(inBounds (currentTarget) && !getTileState (currentTarget).tile.blocksLineOfFire && !getTileState (currentTarget).unit)) {
-//					break;
-//				}
-//			}
-//		}
-//		return output;
-//	}
 
 	//Determines whether an enemy unit at amHere with movementSpeed move could reach a square beside a player.
 	//If so, gives one such square in moveTo and a corresponding player in target.
@@ -1359,62 +1104,6 @@ public class BoardHandler : MonoBehaviour {
 		return output;
 	}
 
-	public float minEnemyDensity (int depth) {
-		//Debug.Log ("Depth " + depth.ToString ());
-		//return 0f;
-		return 1f - Mathf.Pow (0.99f, (float)depth+3);
-	}
-	public float maxEnemyDensity (int depth) {
-		//return 0f;
-		return 1f - Mathf.Pow (0.99f, (float)depth+5);
-	}
-	public GameObject enemyToSpawn (int depth) {
-		float[] probabilities = new float[spawnableEnemies.Length];
-		for (int i = 0; i < spawnableEnemies.Length; i++) {
-			if (enemyStandardDepth [i] > depth) {
-				probabilities [i] = enemyRarity [i] * Mathf.Exp (-Mathf.Pow (enemyStandardDepth [i] / depth,2f) * enemySpawnDepthTolerance);
-			} else {
-				probabilities [i] = enemyRarity [i] * Mathf.Exp (-Mathf.Abs (enemyStandardDepth [i] / depth) * enemySpawnDepthTolerance);
-			}
-		}
-		float totalProbabilities = probabilities.Sum ();
-		float roll = Random.value;
-		for (int i = 0; i < spawnableEnemies.Length; i++) {
-			roll -= probabilities [i] / totalProbabilities;
-			if (roll < 0) {
-				return spawnableEnemies [i];
-			}
-		}
-		throw new System.Exception ("Something wrong wih my enemy spawning algorithm.");
-	}
-
-
-	public float minItemDensity (int depth) {
-		return 1f - Mathf.Pow (0.995f, (float)(depth+3));
-	}
-	public float maxItemDensity (int depth) {
-		return 1f - Mathf.Pow (0.995f, (float)(depth+7));
-	}
-	public GameObject itemToSpawn (int depth) {
-		float[] probabilities = new float[spawnableItems.Length];
-		for (int i = 0; i < spawnableItems.Length; i++) {
-			if (itemStandardDepth [i] > depth) {
-				probabilities [i] = itemRarity [i] * Mathf.Exp (-Mathf.Pow (itemStandardDepth [i] / depth,2f) * itemSpawnDepthTolerance);
-			} else {
-				probabilities [i] = itemRarity [i] * Mathf.Exp (-Mathf.Abs (itemStandardDepth [i] / depth) * itemSpawnDepthTolerance);
-			}
-		}
-		float totalProbabilities = probabilities.Sum ();
-		float roll = Random.value;
-		for (int i = 0; i < spawnableItems.Length; i++) {
-			roll -= probabilities [i] / totalProbabilities;
-			if (roll < 0) {
-				return spawnableItems [i];
-			}
-		}
-		throw new System.Exception ("Something wrong wih my item spawning algorithm.");
-	}
-
 	public List<Coords> getOpenTilesAround(Coords c, int range) {
 		List<Coords> output = new List<Coords> ();
 		for (int x = -range; x < range + 1; x++) {
@@ -1425,28 +1114,6 @@ public class BoardHandler : MonoBehaviour {
 			}
 		}
 		return output;
-	}
-
-	//Returns a random partition of total into clumps pieces. Each has at least 1 in it.
-	public int[] splitUpInteger (int total, int clumps) {
-		Assert.IsTrue(total >= clumps);
-		int[] output = new int[clumps];
-		for (int i = 0; i< clumps; i++) {
-			output [i] = 1;
-		}
-		for (int i = 0; i<  total - clumps; i++) {
-			output [Random.Range(0,clumps-1)] += 1;
-		}
-		return output;
-	}
-
-	//The number of clumps of substance X at this depth.
-	public int substanceXclumps (int depth) {
-		return 5 + 2 * depth;
-	}
-	//The total amount of substance X at this depth.
-	public int substanceXtotal (int depth) {
-		return 10 * depth;
 	}
 
 	public void BrownianMotion (Coords amHere, int move) {
@@ -1475,25 +1142,6 @@ public class BoardHandler : MonoBehaviour {
 			GameObject.FindGameObjectWithTag ("PlayerTeam").GetComponent<PlayerTeamScript> ().NewLevel ();
 			needToRefreshPlayerTeam = false;
 		}
-	}
-
-	public bool isTraversable () {
-		HashSet<Coords> seen = new HashSet<Coords>{ new Coords (0, 0) };
-		List<Coords> toCheck = new List<Coords> { new Coords (0, 0) };
-		while (toCheck.Count != 0) {
-			int index = toCheck.Count - 1;
-			foreach (Coords c in new List<Coords>{Coords.UP,Coords.LEFT,Coords.RIGHT,Coords.DOWN}) {
-				if (inBounds (toCheck [index] + c) && getTileState (toCheck [index] + c).tile.isPassable && !seen.Contains(toCheck[index]+c)) {
-					if (getTileState (toCheck [index] + c).tile.isGoal) {
-						return true;
-					}
-					seen.Add (toCheck [index] + c);
-					toCheck.Add(toCheck [index] + c);
-				}
-			}
-			toCheck.RemoveAt(index);
-		}
-		return false;
 	}
 
 	//Highlights all targetable squares according to input parameters.
@@ -1584,13 +1232,13 @@ public class BoardHandler : MonoBehaviour {
 			}
 		}
 		int crossRange;
-		Debug.Log ("Range = " + range);
+		//Debug.Log ("Range = " + range);
 		for (int i = -range; i <= range; i++) {
-			Debug.Log ("i = " + i);
+			//Debug.Log ("i = " + i);
 			crossRange = allowsDiagonals ? range : range - Math.Abs (i);
-			Debug.Log ("Cross Range = " + crossRange);
+			//Debug.Log ("Cross Range = " + crossRange);
 			for (int j = -crossRange; j <= crossRange; j++) {
-				Debug.Log ("(" + i + "," + j + ")");
+				//Debug.Log ("(" + i + "," + j + ")");
 				if (i != 0 || j != 0) {
 					if (Math.Abs(i) + Math.Abs(j) >= minimumRange) {
 						bool unblocked = true;
@@ -1670,58 +1318,37 @@ public class BoardHandler : MonoBehaviour {
 	//======================================================IO Here=============================================================//
 	[System.Serializable]
 	public class BoardHandlerSave {
-
-		//NOTE: GAME SHOULD NOT BE SAVED MID ACTION.
-
-
-//		public int ultimateSpawnTurn;
-//		public int chaserTurn;
-//		public int doubleChaserTurn;
-//		public int eliteChaserTurn;
-//		public GameObject chaser;
-//		public GameObject eliteChaser;
-//		public GameObject ultimateSpawn;
-//		public float itemSpawnDepthTolerance;
-//		public float enemySpawnDepthTolerance;
-
-
-		//This contains all of the state transition logic. State tranrsitions that aren't supposed to happen throw
-		//exceptions.
-//		private GameStates _currentGameState;
-
-
-//		public const int defaultMapHeight = 20;
-//		public const int defaultMapWidth = 20;
-//		public GameObject emptyTile;
-//		public GameObject wallTile;
-//		public GameObject substanceX;
-//		public GameObject[] spawnableEnemies;
-//		public float[] enemyStandardDepth;
-//		public float[] enemyRarity; //Lower is rarer.
-//		public GameObject[] spawnableItems;
-//		public float[] itemStandardDepth;
-//		public float[] itemRarity; //Lower is rarer.
-//		public GameObject goalTile; //These are the prefabs used for level generation.
-//		public float minWallDensity = 0.1f;
-//		public float maxWallDensity = 0.2f;
-//		public const float tileSize=0.5f; //Number of pixels per tile.
-
-
-
 		private int _turnNumber=1;
 		public int mapHeight;
 		public int mapWidth;
 		public tileState.tileStateSave[,] gameBoard;
-//		public Coords selected { get; private set;}
-//		private bool is_selected = false;
+		public LayoutType layout;
+		public float[] layoutParameters;
+		public ObjectiveType objective;
+		public int[] objectiveParameters;
 
+		public BoardHandlerSave() {
+			this._turnNumber = 0;
+			this.mapHeight = defaultMapHeight;
+			this.mapWidth = defaultMapWidth;
+			this.gameBoard = new tileState.tileStateSave[mapWidth,mapHeight];
+			for (int i = 0; i < mapWidth; i++) {
+				for (int j = 0; j < mapHeight; j++) {
+					this.gameBoard[i,j] = new tileState.tileStateSave();
+				}
+			}
 
+		}
 
 		public BoardHandlerSave (BoardHandler bh) {
 			this._turnNumber = bh._turnNumber;
 			this.mapHeight = bh.mapHeight;
 			this.mapWidth = bh.mapWidth;
 			this.gameBoard = new tileState.tileStateSave[mapWidth,mapHeight];
+			this.layout = bh.layout;
+			this.layoutParameters = (float[]) (bh.layoutParameters.Clone());
+			this.objective = bh.objective;
+			this.objectiveParameters = (int[]) (bh.objectiveParameters.Clone());
 
 			for (int i = 0; i < mapWidth; i++) {
 				for (int j = 0; j < mapHeight; j++) {
@@ -1770,6 +1397,10 @@ public class BoardHandler : MonoBehaviour {
 			bh._turnNumber = this._turnNumber;
 			bh.mapHeight = this.mapHeight;
 			bh.mapWidth = this.mapWidth;
+			bh.layout = this.layout;
+			bh.layoutParameters = (float[]) (this.layoutParameters.Clone());
+			bh.objective = this.objective;
+			bh.objectiveParameters = (int[]) (this.objectiveParameters.Clone());
 			bh.gameBoard = new tileState[mapWidth, mapHeight];
 			bh.suppressInitialization = true;
 			bh.needToRefreshPlayerTeam = false;
