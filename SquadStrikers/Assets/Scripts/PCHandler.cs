@@ -323,7 +323,9 @@ public partial class PCHandler : Unit {
 		get {
 			List<Action> actions = new List<Action> {new Action ("Do Nothing", "This unit will end its turn.", null)};
 			BoardHandler boardHandler = GameObject.FindGameObjectWithTag ("BoardHandler").GetComponent<BoardHandler> ();
-			if (boardHandler.getTileState (boardHandler.FindUnit (this)).tile.isGoal) {
+			if (boardHandler.getTileState (boardHandler.FindUnit (this)).tile.isGoal && (boardHandler.objective == BoardHandler.ObjectiveType.Sprint
+                                                                                      || boardHandler.objective == BoardHandler.ObjectiveType.TreasureHunt
+                                                                                      || boardHandler.objective == BoardHandler.ObjectiveType.OptionalBoss)) {
 				actions.Add (new Action("Exit Level", "This unit will leave the level. Once all surviving squad members have done this, you move on to the next level. If this is the last level, doing this instantly wins the game.", null));
 			}
 			foreach (Item item in inventory) {

@@ -105,9 +105,27 @@ Backend:
 Moved all of the level generation code to a separate class, rather than being in the Board Handler class.
 Additionally, cleaned up some cruft in the Board Handler class. These two combined to reduce it from well over 2000 lines to 1424.
 
+0.2.2
+
+Gameplay:
+Can only leave levels through exit tile by default in Sprint, Optional Boss or Treasure Hunt level objectives.
+Sprint still the only level type that can be generated.
+
 Known issues:
+Each level objective needs to actually work:
+-Regular enemy spawning and agro should be happening in Survive type.
+-Victory should occur after a certain time in Survive type.
+-Kill counter needs to be added for Slaughter type.
+-Bosses need to be implemented.
+-Optional Bosses need to be implemented.
+-KeyCollect tracker and verifier need to work.
+-Pressing buttons needs to work.
+-Buttons need to end game if not enough living squad members.
+-Treasure hunts need to be added.
+-Working objectives need to be enabled in BoardGenerator.
+UI needs to display objectives.
+Art needed for keys, buttons and treasure maps.
 The same boss shouldn't spawn more than once.
-Objectives need to actually work.
 Guards should be coded to preferentially spawn in doorways.
 Mage mana regen too high
 Arrow key based targeting should be possible to allow complete keyboard play.

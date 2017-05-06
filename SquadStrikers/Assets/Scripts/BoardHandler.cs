@@ -11,10 +11,10 @@ public class BoardHandler : MonoBehaviour {
 
 
 	public enum LayoutType {Open,Maze,Rooms,Grid,RoomsMaze,RoomsOpen}
-	LayoutType layout; //Basic layout type of the level.
+	public LayoutType layout; //Basic layout type of the level.
 	float[] layoutParameters; //Parameters used by layout type in creating level. Don't worry about these except when randomizing new levels.
 	public enum ObjectiveType {Sprint,Survive,Boss,Slaughter,OptionalBoss,KeyCollect,TreasureHunt,Buttons}
-	ObjectiveType objective; //Objective to complete the level.
+	public ObjectiveType objective; //Objective to complete the level.
 	int[] objectiveParameters; //Paramters used by the objective, such as the number of turns to survive in a survival objective.
 	//A by-value pair of ints representing a position on the gameBoard in squares.
 	public GameObject defaultPlayerTeam;
@@ -1175,11 +1175,11 @@ public class BoardHandler : MonoBehaviour {
 		if (includeSelf) {
 			if (getTileState (startPoint).unit) {
 				getTileState (startPoint).unit.targeting = type;
-				defaultTarget = getTileState (currentTarget).unit.gameObject;
+				defaultTarget = getTileState (startPoint).unit.gameObject;
 
 			} else {
 				getTileState (startPoint).tile.targeting = type;
-				defaultTarget = getTileState (currentTarget).tile.gameObject;
+				defaultTarget = getTileState (startPoint).tile.gameObject;
 			}
 		}
 		foreach (Coords direction in new Coords[] {Coords.DOWN, Coords.LEFT, Coords.RIGHT, Coords.UP}) {
